@@ -7,12 +7,13 @@ from datetime import datetime
 
 DB_FILE = "planner.db"
 
-STATUSES = (
+TASK_STATUSES = (
     "TBD",
     "WIP",
     "Awaiting",
     "Done"
 )
+
 
 class PlannerApp(tk.Tk):
     def __init__(self):
@@ -30,9 +31,11 @@ class PlannerApp(tk.Tk):
         self.selected_task_id = None
 
         self.build_interface()
+        self.recalculate_all_task_statuses()
         self.load_tasks()
 
         self.protocol("WM_DELETE_WINDOW", self.close_app)
+
 
     def create_tables(self):
         self.conn.execute(
@@ -42,6 +45,8 @@ class PlannerApp(tk.Tk):
                 title TEXT NOT NULL,
                 deadline TEXT,
                 dependency TEXT,
+                status TEXT NOT NULL DEFAULT 'TBD',
+                awaiting_confirmed INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL
             )
             """
@@ -50,14 +55,87 @@ class PlannerApp(tk.Tk):
         self.conn.execute(
             """
             CREATE TABLE IF NOT EXISTS steps (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            task_id INTEGER NOT NULL,
-            description TEXT NOT NULL,
-            status TEXT NOT NULL DEFAULT 'TBD',
-            dependency TEXT,
-            position INTEGER NOT NULL DEFAULT 0,
-            FOREIGN KEY (task_id) REFERENCES tasks(id)
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_id INTEGER NOT NULL,
+                description TEXT NOT NULL,
+                is_done INTEGER NOT NULL DEFAULT 0,
+                has_dependency INTEGER NOT NULL DEFAULT 0,
+                dependency TEXT,
+                position INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (task_id) REFERENCES tasks(id)
             )
+            """
+        )
+
+        #Upgrade an older tasks table without deleting its contents.
+        task_columns = {
+            row["name"]
+            for row in self.conn.execute(
+                "PRAGMA table_info(tasks)"
+            ).fetchall()
+        }
+
+        if "status" not in task_columns:
+            self.conn.execute(
+                """
+                ALTER TABLE tasks
+                ADD COLUMN status TEXT NOT NULL DEFAULT 'TBD'
+                """
+            )
+
+        if "awaiting_confirmed" not in task_columns:
+            self.conn.execute(
+                """
+                ALTER TABLE tasks
+                ADD COLUMN awaiting_confirmed 
+                INTEGER NOT NULL DEFAULT 0
+                """
+            )
+
+        #Upgrade an older steps table
+        step_columns = {
+            row["name"]
+            for row in self.conn.execute(
+                "PRAGMA table_info(steps)"
+            ).fetchall()
+        }
+
+        if "is_done" not in step_columns:
+            self.conn.execute(
+                """
+                ALTER TABLE steps
+                ADD COLUMN is_done INTEGER NOT NULL DEFAULT 0
+                """
+            )
+
+        #Preserve old steps that were already marked as done
+        if "status" in step_columns:
+            self.conn.execute(
+                """
+                UPDATE steps
+                SET is_done = 1
+                WHERE LOWER(status) IN ('done', 'completed')
+                """
+            )
+
+        if "has_dependency" not in step_columns:
+            self.conn.execute(
+                """
+                ALTER TABLE steps
+                ADD COLUMN has_dependency 
+                INTEGER NOT NULL DEFAULT 0
+                """
+            )
+
+        self.conn.execute(
+            """
+            UPDATE steps
+            SET has_dependency = 
+                CASE
+                    WHEN dependency IS NOT NULL AND TRIM(dependency) != ''
+                    THEN 1
+                    ELSE 0
+                END
             """
         )
 
@@ -218,6 +296,7 @@ class PlannerApp(tk.Tk):
         task_columns = (
             "title",
             "deadline",
+            "status",
             "dependency"
         )
 
@@ -239,6 +318,11 @@ class PlannerApp(tk.Tk):
         )
 
         self.task_tree.heading(
+            "status",
+            text="Status"
+        )
+
+        self.task_tree.heading(
             "dependency",
             text="Dependent on"
         )
@@ -251,6 +335,12 @@ class PlannerApp(tk.Tk):
         self.task_tree.column(
             "deadline",
             width=100,
+            anchor="center"
+        )
+
+        self.task_tree.column(
+            "status",
+            width=170,
             anchor="center"
         )
 
@@ -309,6 +399,16 @@ class PlannerApp(tk.Tk):
             side=tk.LEFT
         )
 
+        self.complete_awaiting_button = ttk.Button(
+            task_button_frame,
+            text="Complete awaiting task",
+            command=self.complete_awaiting_task
+        )
+
+        self.complete_awaiting_button.pack(
+            side=tk.RIGHT,
+        )
+
 
 
 
@@ -353,12 +453,12 @@ class PlannerApp(tk.Tk):
 
         self.step_description_var = tk.StringVar()
 
-        step_description_entry = ttk.Entry(
+        self.step_description_entry = ttk.Entry(
             step_form,
             textvariable=self.step_description_var
         )
 
-        step_description_entry.grid(
+        self.step_description_entry.grid(
             row=1,
             column=0,
             columnspan=2,
@@ -366,72 +466,64 @@ class PlannerApp(tk.Tk):
             pady=(2, 8)
         )
 
+        self.new_step_done_var = tk.BooleanVar(value=False)
 
-
-
-        status_label = ttk.Label(
+        new_step_done_checkbox = ttk.Checkbutton(
             step_form,
-            text="Status"
+            text="Done",
+            variable=self.new_step_done_var
         )
 
-        status_label.grid(
+        new_step_done_checkbox.grid(
             row=2,
             column=0,
-            sticky="w"
+            sticky="w",
+            pady=(2, 8)
         )
 
-        self.step_status_var = tk.StringVar(
-            value="TBD"
-        )
+        self.new_step_has_dependency_var = tk.BooleanVar(value=False)
 
-        status_dropdown = ttk.Combobox(
+        new_step_dependency_checkbox = ttk.Checkbutton(
             step_form,
-            textvariable=self.step_status_var,
-            values=STATUSES,
-            state="readonly"
+            text="Has dependency",
+            variable=self.new_step_has_dependency_var,
+            command=self.toggle_new_step_dependency
         )
 
-        status_dropdown.grid(
-            row=3,
-            column=0,
-            sticky="ew",
-            pady=(2, 8),
-            padx=(0, 5)
+        new_step_dependency_checkbox.grid(
+            row=2,
+            column=1,
+            sticky="w",
+            pady=(2, 8)
         )
-
-
-
-
-
 
         step_dependency_label = ttk.Label(
             step_form,
-            text="Dependent on (optional)"
+            text="Dependent on "
         )
 
         step_dependency_label.grid(
-            row=2,
-            column=1,
+            row=3,
+            column=0,
+            columnspan=2,
             sticky="w"
         )
 
         self.step_dependency_var = tk.StringVar()
 
-        step_dependency_entry = ttk.Entry(
+        self.step_dependency_entry = ttk.Entry(
             step_form,
-            textvariable=self.step_dependency_var
+            textvariable=self.step_dependency_var,
+            state="disabled"
         )
 
-        step_dependency_entry.grid(
-            row=3,
-            column=1,
+        self.step_dependency_entry.grid(
+            row=4,
+            column=0,
+            columnspan=2,
             sticky="ew",
-            pady=(2, 8),
-            padx=(5, 0)
+            pady=(2, 8)
         )
-
-
-
 
 
         add_step_button = ttk.Button(
@@ -441,7 +533,7 @@ class PlannerApp(tk.Tk):
         )
 
         add_step_button.grid(
-            row=4,
+            row=5,
             column=0,
             columnspan=2,
             sticky="ew"
@@ -456,7 +548,7 @@ class PlannerApp(tk.Tk):
 
         step_columns = (
             "description",
-            "status",
+            "done",
             "dependency"
         )
 
@@ -473,8 +565,8 @@ class PlannerApp(tk.Tk):
         )
 
         self.step_tree.heading(
-            "status",
-            text="Status"
+            "done",
+            text="Done"
         )
 
         self.step_tree.heading(
@@ -488,8 +580,8 @@ class PlannerApp(tk.Tk):
         )
 
         self.step_tree.column(
-            "status",
-            width=100,
+            "done",
+            width=70,
             anchor="center"
         )
 
@@ -540,42 +632,57 @@ class PlannerApp(tk.Tk):
             pady=(10, 0)
         )
 
-        status_change_label = ttk.Label(
+        self.selected_step_done_var = tk.BooleanVar(value=False)
+
+        selected_done_checkbox = ttk.Checkbutton(
             step_button_frame,
-            text="Change selected step status:"
+            text="Done",
+            variable=self.selected_step_done_var
         )
 
-        status_change_label.pack(
+        selected_done_checkbox.pack(
             side=tk.LEFT
         )
 
-        self.selected_status_var = tk.StringVar(
-            value="TBD"
-        )
+        self.selected_step_has_dependency_var = tk.BooleanVar(value=False)
 
-        selected_status_dropdown = ttk.Combobox(
+        selected_dependency_checkbox = ttk.Checkbutton(
             step_button_frame,
-            textvariable=self.selected_status_var,
-            values=STATUSES,
-            state="readonly",
-            width=12
+            text="Has dependency",
+            variable=self.selected_step_has_dependency_var,
+            command=self.toggle_selected_step_dependency
         )
 
-        selected_status_dropdown.pack(
-            side= tk.LEFT,
+        selected_dependency_checkbox.pack(
+            side=tk.LEFT,
+            padx=(10, 5)
+        )
+
+        self.selected_step_dependency_var = tk.StringVar()
+
+        self.selected_step_dependency_entry = ttk.Entry(
+            step_button_frame,
+            textvariable=self.step_dependency_var,
+            state="disabled",
+            width=24
+        )
+
+        self.selected_step_dependency_entry.pack(
+            side=tk.LEFT,
             padx=5
         )
 
-        update_status_button = ttk.Button(
+        update_step_button = ttk.Button(
             step_button_frame,
-            text="Update status",
-            command=self.update_step_status
+            text="Update step",
+            command=self.update_step
         )
 
-        update_status_button.pack(
-            side= tk.LEFT
+        update_step_button.pack(
+            side=tk.LEFT,
+            padx=5
         )
-
+       
         delete_step_button = ttk.Button(
             step_button_frame,
             text="Delete step",
@@ -586,6 +693,21 @@ class PlannerApp(tk.Tk):
             side= tk.RIGHT
         )
 
+    def toggle_new_step_dependency(self):
+        if self.new_step_has_dependency_var.get():
+            self.step_dependency_entry.config(state="normal")
+            self.step_dependency_entry.focus_set()
+        else:
+            self.step_dependency_var.set("")
+            self.step_dependency_entry.config(state="disabled")
+
+    def toggle_selected_step_dependency(self):
+        if self.selected_step_has_dependency_var.get():
+            self.selected_step_dependency_entry.config(state="normal")
+            self.selected_step_dependency_entry.focus_set()
+        else:
+            self.selected_step_dependency_var.set("")
+            self.selected_step_dependency_entry.config(state="disabled")
 
 
 
@@ -628,23 +750,29 @@ class PlannerApp(tk.Tk):
 
             return
 
-        self.conn.execute(
+        cursor = self.conn.execute(
             """
-            INSERT INTO tasks(
+            INSERT INTO tasks (
                 title,
                 deadline,
                 dependency,
+                status,
+                awaiting_confirmed,
                 created_at
             )
-            VALUES (?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
                 title,
                 deadline if deadline else None,
                 dependency if dependency else None,
+                "TBD",
+                0,
                 datetime.now().isoformat(timespec="seconds")
             )
         )
+
+        new_task_id = cursor.lastrowid
 
         self.conn.commit()
 
@@ -665,24 +793,60 @@ class PlannerApp(tk.Tk):
         tasks = self.conn.execute(
             """
             SELECT
-                id,
-                title,
-                deadline,
-                dependency
+                tasks.id,
+                tasks.title,
+                tasks.deadline,
+                tasks.dependency,
+                tasks.status,
+
+                COUNT(steps.id) AS total_steps,
+
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN steps.is_done = 1 THEN 1
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS completed_steps
+
             FROM tasks
+
+            LEFT JOIN steps
+                ON steps.task_id = tasks.id
+            
+            GROUP BY
+                tasks.id,
+                tasks.title,
+                tasks.deadline,
+                tasks.dependency,
+                tasks.status
+            
             ORDER BY
                 CASE
-                    WHEN deadline IS NULL
-                    OR deadline = ''
+                    WHEN tasks.deadline IS NULL
+                        OR tasks.deadline = ''
                     THEN 1
                     ELSE 0
                 END,
-                deadline,
-                id DESC
+                tasks.deadline,
+                tasks.id DESC
             """
         ).fetchall()
 
         for task in tasks:
+            status = task["status"]
+            total_steps = task["total_steps"]
+            completed_steps = task["completed_steps"]
+
+            if status == "WIP":
+                display_status = (
+                    f"WIP - {completed_steps}/{total_steps} steps done"
+                )
+            else:
+                display_status = status
+
             self.task_tree.insert(
                 "",
                 tk.END,
@@ -690,11 +854,10 @@ class PlannerApp(tk.Tk):
                 values=(
                     task["title"],
                     task["deadline"] or "",
+                    display_status,
                     task["dependency"] or ""
                 )
             )
-
-
 
 
 
@@ -727,30 +890,33 @@ class PlannerApp(tk.Tk):
 
 
 
-
-
     def add_step(self):
         if self.selected_task_id is None:
-
             messagebox.showwarning(
                 "No task selected",
                 "Please select a task before adding a step."
             )
-
             return
 
         description = self.step_description_var.get().strip()
-        status = self.step_status_var.get()
+        is_done = self.new_step_done_var.get()
+        has_dependency = int(self.new_step_has_dependency_var.get())
         dependency = self.step_dependency_var.get().strip()
 
         if description == "":
-
             messagebox.showwarning(
                 "Missing step description",
-                "Please enter a description for the step."
+                "Please enter a step description."
             )
-
             return
+
+        if has_dependency and dependency == "":
+            messagebox.showwarning(
+                "Missing dependency",
+                "Please enter a dependency for the step."
+            )
+            return
+
         result = self.conn.execute(
             """
             SELECT COALESCE(MAX(position), 0) + 1
@@ -767,29 +933,45 @@ class PlannerApp(tk.Tk):
             INSERT INTO steps (
                 task_id,
                 description,
-                status,
+                is_done,
+                has_dependency,
                 dependency,
                 position
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
                 self.selected_task_id,
                 description,
-                status,
-                dependency if dependency else None,
+                is_done,
+                has_dependency,
+                dependency if has_dependency else None,
                 next_position
             )
+        )
+
+        self.conn.execute(
+            """
+            UPDATE tasks
+            SET awaiting_confirmed = 0
+            WHERE id = ?
+            """,
+            (self.selected_task_id,)
         )
 
         self.conn.commit()
 
         self.step_description_var.set("")
-        self.step_status_var.set("TBD")
+        self.new_step_done_var.set(False)
+        self.new_step_has_dependency_var.set(False)
         self.step_dependency_var.set("")
+        self.step_dependency_var_entry.config(state="disabled")
 
+        self.recalculate_task_status(self.selected_task_id)
         self.load_steps()
+        self.load_tasks()
 
+        self.step_description_entry.focus_set()
 
     def load_steps(self):
         for item in self.step_tree.get_children():
@@ -803,7 +985,8 @@ class PlannerApp(tk.Tk):
             SELECT
                 id,
                 description,
-                status,
+                is_done,
+                has_dependency,
                 dependency
             FROM steps
             WHERE task_id = ?
@@ -811,18 +994,25 @@ class PlannerApp(tk.Tk):
                 position,
                 id
             """,
-            (self.selected_task_id, )
+            (self.selected_task_id,)
         ).fetchall()
 
         for step in steps:
+            done_symbol = "☑" if step["is_done"] else "☐"
+
+            if step["has_dependency"]:
+                dependency_display = step["dependency"] or ""
+            else:
+                dependency_display = ""
+
             self.step_tree.insert(
                 "",
                 tk.END,
                 iid=str(step["id"]),
                 values=(
                     step["description"],
-                    step["status"],
-                    step["dependency"] or ""
+                    done_symbol,
+                    dependency_display
                 )
             )
 
@@ -837,17 +1027,41 @@ class PlannerApp(tk.Tk):
         if not selected_items:
             return
 
-        selected_step = selected_items[0]
-
-        values = self.step_tree.item(
-            selected_step,
-            "values"
+        step_id = int(
+            selected_items[0]
         )
 
-        if values:
-            self.selected_status_var.set(
-                values[1]
-            )
+        step = self.conn.execute(
+            """
+            SELECT
+                is_done,
+                has_dependency,
+                dependency
+            FROM steps
+            WHERE id = ?
+            """,
+            (step_id,)
+        ).fetchone()
+
+        if step is None:
+            return
+
+        self.selected_step_done_var.set(
+            bool(step["is_done"])
+        )
+
+        self.selected_step_has_dependency_var.set(
+            bool(step["has_dependency"])
+        )
+
+        self.selected_step_dependency_var.set(
+            step["dependency"] or ""
+        )
+
+        if step["has_dependency"]:
+            self.selected_step_dependency_entry.config(state="normal")
+        else:
+            self.selected_step_dependency_entry.config(state="disabled")
 
 
 
@@ -855,7 +1069,7 @@ class PlannerApp(tk.Tk):
 
 
     #Update a step's status
-    def update_step_status(self):
+    def update_step(self):
         selected_items = self.step_tree.selection()
 
         if not selected_items:
@@ -870,23 +1084,214 @@ class PlannerApp(tk.Tk):
             selected_items[0]
         )
 
-        new_status = self.selected_status_var.get()
+        is_done = int(
+            self.selected_step_done_var.get()
+        )
+
+        has_dependency = int(
+            self.selected_step_has_dependency_var.get()
+        )
+
+        dependency = (self.selected_step_dependency_var.get().strip())
+
+        if has_dependency and dependency == "":
+            messagebox.showwarning(
+                "Missing dependency",
+                "Please enter a dependency for the step."
+            )
+
+            return
 
         self.conn.execute(
             """
             UPDATE steps
-            SET status = ?
+            SET
+                is_done = ?,
+                has_dependency = ?,
+                dependency = ?
             WHERE id = ?
             """,
             (
-                new_status,
+                is_done,
+                has_dependency,
+                dependency if has_dependency else None,
                 step_id
+            )
+        )
+
+        self.conn.execute(
+            """
+            UPDATE tasks
+            SET awaiting_confirmed = 0
+            WHERE id = ?
+            """,
+            (self.selected_task_id,)
+        )
+
+        self.conn.commit()
+
+        self.recalculate_task_status(self.selected_task_id)
+        self.load_steps()
+        self.load_tasks()
+
+    def recalculate_task_status(self, task_id):
+        task = self.conn.execute(
+            """
+            SELECT
+                dependency,
+                awaiting_confirmed
+            FROM tasks
+            WHERE id = ?
+            """,
+            (task_id,)
+        ).fetchone()
+
+        if task is None:
+            return
+
+        step_summary = self.conn.execute(
+            """
+            SELECT
+                COUNT(*) AS total_steps,
+                
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN is_done = 1 THEN 1
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS completed_steps,
+
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN has_dependency = 1
+                                AND dependency IS NOT NULL
+                                AND TRIM(dependency) != ''
+                            THEN 1
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS dependent_steps
+            
+            FROM steps
+            WHERE task_id = ?
+            """,
+            (task_id,)
+        ).fetchone()
+
+        total_steps = step_summary["total_steps"]
+        completed_steps = step_summary["completed_steps"]
+        dependent_steps = step_summary["dependent_steps"]
+
+        task_has_dependency = bool(
+            task["dependency"]
+            and task["dependency"].strip()
+        )
+
+        has_any_dependency =(
+            task_has_dependency
+            or dependent_steps > 0
+        )
+
+        if total_steps == 0:
+            new_status = "TBD"
+
+        elif completed_steps == 0:
+            new_status = "TBD"
+
+        elif completed_steps < total_steps:
+            new_status = "WIP"
+
+        elif has_any_dependency:
+            if task["awaiting_confirmed"]:
+                new_status = "Completed"
+            else:
+                new_status = "Awaiting"
+
+        else:
+            new_status = "Completed"
+
+        self.conn.execute(
+            """
+            UPDATE tasks
+            SET status = ?
+            WHERE id = ?
+            """,
+            (new_status, 
+             task_id
             )
         )
 
         self.conn.commit()
 
-        self.load_steps()
+
+    def recalculate_all_task_statuses(self):
+        task_ids = self.conn.execute(
+            """
+            SELECT id
+            FROM tasks
+            """
+        ).fetchall()
+
+        for task in task_ids:
+            self.recalculate_task_status(task["id"])
+
+
+    def complete_awaiting_task(self):
+        if self.selected_task_id is None:
+            messagebox.showwarning(
+                "No task selected",
+                "Please select a task first."
+            )
+            return
+
+        task = self.conn.execute(
+            """
+            SELECT status
+            FROM tasks
+            WHERE id = ?
+            """,
+            (self.selected_task_id,)
+        ).fetchone()
+
+        if task is None:
+            return
+
+        if task["status"] != "Awaiting":
+            messagebox.showinfo(
+                "Task not awaiting",
+                "The selected task is not in 'Awaiting' status."
+            )
+            return
+
+        should_complete = messagebox.askyesno(
+            "Complete awaiting task",
+            (
+                "Confirm that the dependencies for this task are resolved and mark it as completed?"
+            )
+        )
+
+        if not should_complete:
+            return
+
+        self.conn.execute(
+            """
+            UPDATE tasks
+            SET
+                awaiting_confirmed = 1,
+                status = 'Completed'
+            WHERE id = ?
+            """,
+            (self.selected_task_id,)
+        )
+
+        self.conn.commit()
+        self.load_tasks()
+
 
 
 
@@ -971,9 +1376,26 @@ class PlannerApp(tk.Tk):
 
             return
 
-        step_id = int(
-            selected_items[0]
-        )
+        if self.selected_task_id is None:
+            return
+
+        step_count = self.conn.execute(
+            """
+            SELECT COUNT(*)
+            FROM steps
+            WHERE task_id = ?
+            """,
+            (self.selected_task_id,)
+        ).fetchone()[0]
+
+        if step_count <= 1:
+            messagebox.showwarning(
+                "Step required",
+                "A task must contain at least one step."
+            )
+            return
+
+        step_id = int(selected_items[0])
 
         step_values = self.step_tree.item(
             selected_items[0],
@@ -1000,7 +1422,9 @@ class PlannerApp(tk.Tk):
 
         self.conn.commit()
 
+        self.recalculate_task_status(self.selected_task_id)
         self.load_steps()
+        self.load_tasks()
 
 
 
@@ -1008,6 +1432,31 @@ class PlannerApp(tk.Tk):
 
     #Closing the database
     def close_app(self):
+        tasks_without_steps = self.conn.execute(
+            """
+            SELECT COUNT(*)
+            FROM tasks
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM steps
+                WHERE steps.task_id = tasks.id
+            )
+            """
+        ).fetchone()[0]
+
+        if tasks_without_steps > 0:
+            should_close = messagebox.askyesno(
+                "Tasks without steps",
+                (
+                    f"There are {tasks_without_steps} tasks without any steps. "
+                    "Are you sure you want to exit?"
+                )
+            )
+
+            if not should_close:
+                return
+
+            
         self.conn.close()
         self.destroy()
 
