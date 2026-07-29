@@ -576,18 +576,26 @@ class PlannerApp(tk.Tk):
 
         self.step_tree.column(
             "description",
-            width=420
+            width=70,
+            minwidth=70,
+            anchor="center",
+            stretch=False
         )
 
         self.step_tree.column(
             "done",
             width=70,
-            anchor="center"
+            minwidth=70,
+            anchor="center",
+            stretch=False
         )
 
         self.step_tree.column(
             "dependency",
-            width=160
+            width=70,
+            minwidth=70,
+            anchor="center",
+            stretch=False
         )
 
 
@@ -617,8 +625,8 @@ class PlannerApp(tk.Tk):
         )
 
         self.step_tree.bind(
-            "<<TreeviewSelect>>",
-            self.on_step_selected
+            "<Button-1>",
+            self.on_step_tree_click
         )
 
 
@@ -632,56 +640,11 @@ class PlannerApp(tk.Tk):
             pady=(10, 0)
         )
 
-        self.selected_step_done_var = tk.BooleanVar(value=False)
+        #self.selected_step_done_var = tk.BooleanVar(value=False)
 
-        selected_done_checkbox = ttk.Checkbutton(
-            step_button_frame,
-            text="Done",
-            variable=self.selected_step_done_var
-        )
+        #self.selected_step_has_dependency_var = tk.BooleanVar(value=False)
 
-        selected_done_checkbox.pack(
-            side=tk.LEFT
-        )
-
-        self.selected_step_has_dependency_var = tk.BooleanVar(value=False)
-
-        selected_dependency_checkbox = ttk.Checkbutton(
-            step_button_frame,
-            text="Has dependency",
-            variable=self.selected_step_has_dependency_var,
-            command=self.toggle_selected_step_dependency
-        )
-
-        selected_dependency_checkbox.pack(
-            side=tk.LEFT,
-            padx=(10, 5)
-        )
-
-        self.selected_step_dependency_var = tk.StringVar()
-
-        self.selected_step_dependency_entry = ttk.Entry(
-            step_button_frame,
-            textvariable=self.step_dependency_var,
-            state="disabled",
-            width=24
-        )
-
-        self.selected_step_dependency_entry.pack(
-            side=tk.LEFT,
-            padx=5
-        )
-
-        update_step_button = ttk.Button(
-            step_button_frame,
-            text="Update step",
-            command=self.update_step
-        )
-
-        update_step_button.pack(
-            side=tk.LEFT,
-            padx=5
-        )
+        #self.selected_step_dependency_var = tk.StringVar()
        
         delete_step_button = ttk.Button(
             step_button_frame,
@@ -700,15 +663,6 @@ class PlannerApp(tk.Tk):
         else:
             self.step_dependency_var.set("")
             self.step_dependency_entry.config(state="disabled")
-
-    def toggle_selected_step_dependency(self):
-        if self.selected_step_has_dependency_var.get():
-            self.selected_step_dependency_entry.config(state="normal")
-            self.selected_step_dependency_entry.focus_set()
-        else:
-            self.selected_step_dependency_var.set("")
-            self.selected_step_dependency_entry.config(state="disabled")
-
 
 
     def validate_deadline(self, deadline):
@@ -1016,123 +970,6 @@ class PlannerApp(tk.Tk):
                 )
             )
 
-
-
-
-
-    #Detect when a step is selected
-    def on_step_selected(self, event=None):
-        selected_items = self.step_tree.selection()
-
-        if not selected_items:
-            return
-
-        step_id = int(
-            selected_items[0]
-        )
-
-        step = self.conn.execute(
-            """
-            SELECT
-                is_done,
-                has_dependency,
-                dependency
-            FROM steps
-            WHERE id = ?
-            """,
-            (step_id,)
-        ).fetchone()
-
-        if step is None:
-            return
-
-        self.selected_step_done_var.set(
-            bool(step["is_done"])
-        )
-
-        self.selected_step_has_dependency_var.set(
-            bool(step["has_dependency"])
-        )
-
-        self.selected_step_dependency_var.set(
-            step["dependency"] or ""
-        )
-
-        if step["has_dependency"]:
-            self.selected_step_dependency_entry.config(state="normal")
-        else:
-            self.selected_step_dependency_entry.config(state="disabled")
-
-
-
-
-
-
-    #Update a step's status
-    def update_step(self):
-        selected_items = self.step_tree.selection()
-
-        if not selected_items:
-            messagebox.showwarning(
-                "No step selected",
-                "Please select a step first."
-            )
-
-            return
-
-        step_id = int(
-            selected_items[0]
-        )
-
-        is_done = int(
-            self.selected_step_done_var.get()
-        )
-
-        has_dependency = int(
-            self.selected_step_has_dependency_var.get()
-        )
-
-        dependency = (self.selected_step_dependency_var.get().strip())
-
-        if has_dependency and dependency == "":
-            messagebox.showwarning(
-                "Missing dependency",
-                "Please enter a dependency for the step."
-            )
-
-            return
-
-        self.conn.execute(
-            """
-            UPDATE steps
-            SET
-                is_done = ?,
-                has_dependency = ?,
-                dependency = ?
-            WHERE id = ?
-            """,
-            (
-                is_done,
-                has_dependency,
-                dependency if has_dependency else None,
-                step_id
-            )
-        )
-
-        self.conn.execute(
-            """
-            UPDATE tasks
-            SET awaiting_confirmed = 0
-            WHERE id = ?
-            """,
-            (self.selected_task_id,)
-        )
-
-        self.conn.commit()
-
-        self.recalculate_task_status(self.selected_task_id)
-        self.load_steps()
-        self.load_tasks()
 
     def recalculate_task_status(self, task_id):
         task = self.conn.execute(
@@ -1460,6 +1297,78 @@ class PlannerApp(tk.Tk):
         self.conn.close()
         self.destroy()
 
+    def on_step_tree_click(self, event):
+        region = self.step_tree.identify_region(event.x, event.y)
+
+        if region != "cell":
+            return
+
+        column = self.step_tree.identify_column(event.x)
+
+        row_id = self.step_tree.identify_row(event.y)
+
+        if not row_id:
+            return
+
+        if column != "#2":
+            return
+
+        step_id = int(row_id)
+
+        step = self.conn.execute(
+            """
+            SELECT is_done
+            FROM steps
+            WHERE id = ?
+            """,
+            (step_id,)
+        ).fetchone()
+
+        if step is None:
+            return
+
+        new_is_done = 0 if step["is_done"] else 1
+
+        self.conn.execute(
+            """
+            UPDATE steps
+            SET is_done = ?
+            WHERE id = ?
+            """,
+            (new_is_done, step_id)
+        )
+
+        self.conn.execute(
+            """
+            UPDATE tasks
+            SET awaiting_confirmed = 0
+            WHERE id = ?
+            """,
+            (self.selected_task_id,)
+        )
+
+        self.conn.commit()
+
+        task_id = self.selected_task_id
+
+        self.recalculate_task_status(task_id)
+        self.load_steps()
+        self.load_tasks()
+
+        if self.task_tree.exists(str(task_id)):
+            self.task_tree.selection_set(str(task_id))
+            self.task_tree.focus(str(task_id))
+            self.task_tree.see(str(task_id))
+
+
+        if self.step_tree.exists(str(step_id)):
+            self.step_tree.selection_set(str(step_id))
+            self.step_tree.focus(str(step_id))
+            self.step_tree.see(str(step_id))
+
+
+        return "break"
+            
 
 
 
