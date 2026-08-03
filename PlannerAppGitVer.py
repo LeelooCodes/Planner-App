@@ -11,7 +11,7 @@ TASK_STATUSES = (
     "TBD",
     "WIP",
     "Awaiting",
-    "Done"
+    "Completed"
 )
 
 
@@ -20,8 +20,6 @@ class PlannerApp(tk.Tk):
         super().__init__()
 
         self.title("Task Planner")
-        self.geometry("1100x700")
-        self.minsize(900, 600)
 
         self.conn = sqlite3.connect(DB_FILE)
         self.conn.row_factory = sqlite3.Row
@@ -33,6 +31,8 @@ class PlannerApp(tk.Tk):
         self.build_interface()
         self.recalculate_all_task_statuses()
         self.load_tasks()
+
+        self.after(0, self.maximize_window)
 
         self.protocol("WM_DELETE_WINDOW", self.close_app)
 
@@ -142,12 +142,12 @@ class PlannerApp(tk.Tk):
         self.conn.commit()
 
     def build_interface(self):
-        main_panel = ttk.Panedwindow(
+        self.main_panel = ttk.Panedwindow(
             self,
             orient=tk.HORIZONTAL
         )
 
-        main_panel.pack(
+        self.main_panel.pack(
             fill=tk.BOTH,
             expand=True,
             padx=10,
@@ -155,17 +155,17 @@ class PlannerApp(tk.Tk):
         )
 
         task_frame = ttk.Frame(
-            main_panel,
+            self.main_panel,
             padding=10
         )
 
         step_frame = ttk.Frame(
-            main_panel,
+            self.main_panel,
             padding=10
         )
 
-        main_panel.add(task_frame, weight=1)
-        main_panel.add(step_frame, weight=2)
+        self.main_panel.add(task_frame, weight=1)
+        self.main_panel.add(step_frame, weight=2)
 
         self.build_task_section(task_frame)
         self.build_step_section(step_frame)
@@ -274,24 +274,60 @@ class PlannerApp(tk.Tk):
 
 
 
-        add_task_button = ttk.Button(
-            task_form,
-            text="Add task",
-            command=self.add_task
-        )
+        task_action_frame = ttk.Frame(task_form)
 
-        add_task_button.grid(
+        task_action_frame.grid(
             row=4,
             column=0,
             columnspan=2,
             sticky="ew"
         )
 
+        task_action_frame.columnconfigure(0, weight=1)
+        task_action_frame.columnconfigure(1, weight=1)
+        task_action_frame.columnconfigure(2, weight=1)
+
+        add_task_button = ttk.Button(
+            task_action_frame,
+            text="Add task",
+            command=self.add_task
+        )
+
+        add_task_button.grid(
+            row=0,
+            column=0,
+            sticky="ew",
+            padx=(0, 5)
+        )
+
+        delete_task_button = ttk.Button(
+            task_action_frame,
+            text="Delete selected task",
+            command=self.delete_task
+        )
+
+        delete_task_button.grid(
+            row=0,
+            column=1,
+            sticky="ew",
+            padx=5
+        )
+
+        self.complete_awaiting_button = ttk.Button(
+            task_action_frame,
+            text="Complete awaiting task",
+            command=self.complete_awaiting_task
+        )
+
+        self.complete_awaiting_button.grid(
+            row=0,
+            column=2,
+            sticky="ew",
+            padx=(5, 0)
+        )
+
         task_form.columnconfigure(0, weight=1)
         task_form.columnconfigure(1, weight=1)
-
-
-
 
         task_columns = (
             "title",
@@ -329,26 +365,32 @@ class PlannerApp(tk.Tk):
 
         self.task_tree.column(
             "title",
-            width=220
+            anchor="w",
+            stretch=True
         )
 
         self.task_tree.column(
             "deadline",
-            width=100,
-            anchor="center"
+            anchor="center",
+            stretch=True
         )
 
         self.task_tree.column(
             "status",
-            width=170,
-            anchor="center"
+            anchor="center",
+            stretch=True
         )
 
         self.task_tree.column(
             "dependency",
-            width=140
+            anchor="w",
+            stretch=True
         )
 
+        self.task_tree.bind(
+            "<Configure>",
+            self.resize_task_columns
+        )
 
 
 
@@ -381,35 +423,24 @@ class PlannerApp(tk.Tk):
 
 
 
+    def maximize_window(self):
+        try:
+            # For Windows
+            self.state("zoomed")
 
-        task_button_frame = ttk.Frame(task_frame)
+        except tk.TclError:
+            try:
+                # For macOS
+                self.attributes("-zoomed", True)
 
-        task_button_frame.pack(
-            fill=tk.X,
-            pady=(10, 0)
-        )
+            except tk.TclError:
+                # For Linux or other platforms
+                screen_width = self.winfo_screenwidth()
+                screen_height = self.winfo_screenheight()
 
-        delete_task_button = ttk.Button(
-            task_button_frame,
-            text="Delete selected task",
-            command=self.delete_task
-        )
-
-        delete_task_button.pack(
-            side=tk.LEFT
-        )
-
-        self.complete_awaiting_button = ttk.Button(
-            task_button_frame,
-            text="Complete awaiting task",
-            command=self.complete_awaiting_task
-        )
-
-        self.complete_awaiting_button.pack(
-            side=tk.RIGHT,
-        )
-
-
+                self.geometry(
+                    f"{screen_width}x{screen_height}+0+0"
+                )
 
 
     def build_step_section(self, step_frame):
@@ -525,18 +556,42 @@ class PlannerApp(tk.Tk):
             pady=(2, 8)
         )
 
+        step_action_frame = ttk.Frame(step_form)
+
+        step_action_frame.grid(
+            row=5,
+            column=0,
+            columnspan=2,
+            sticky="ew"
+        )
+
+        step_action_frame.columnconfigure(0, weight=1)
+        step_action_frame.columnconfigure(1, weight=1)
 
         add_step_button = ttk.Button(
-            step_form,
+            step_action_frame,
             text="Add step",
             command=self.add_step
         )
 
         add_step_button.grid(
-            row=5,
+            row=0,
             column=0,
-            columnspan=2,
-            sticky="ew"
+            sticky="ew",
+            padx=(0, 5)
+        )
+
+        delete_step_button = ttk.Button(
+            step_action_frame,
+            text="Delete selected step",
+            command=self.delete_step
+        )
+
+        delete_step_button.grid(
+            row=0,
+            column=1,
+            sticky="ew",
+            padx=(5, 0)
         )
 
         step_form.columnconfigure(0, weight=1)
@@ -576,26 +631,25 @@ class PlannerApp(tk.Tk):
 
         self.step_tree.column(
             "description",
-            width=70,
-            minwidth=70,
-            anchor="center",
-            stretch=False
+            anchor="w",
+            stretch=True
         )
 
         self.step_tree.column(
             "done",
-            width=70,
-            minwidth=70,
             anchor="center",
             stretch=False
         )
 
         self.step_tree.column(
             "dependency",
-            width=70,
-            minwidth=70,
-            anchor="center",
-            stretch=False
+            anchor="w",
+            stretch=True
+        )
+
+        self.step_tree.bind(
+            "<Configure>",
+            self.resize_step_columns
         )
 
 
@@ -630,31 +684,7 @@ class PlannerApp(tk.Tk):
         )
 
 
-
-
-
-        step_button_frame = ttk.Frame(step_frame)
-
-        step_button_frame.pack(
-            fill=tk.X,
-            pady=(10, 0)
-        )
-
-        #self.selected_step_done_var = tk.BooleanVar(value=False)
-
-        #self.selected_step_has_dependency_var = tk.BooleanVar(value=False)
-
-        #self.selected_step_dependency_var = tk.StringVar()
-       
-        delete_step_button = ttk.Button(
-            step_button_frame,
-            text="Delete step",
-            command=self.delete_step
-        )
-
-        delete_step_button.pack(
-            side= tk.RIGHT
-        )
+        
 
     def toggle_new_step_dependency(self):
         if self.new_step_has_dependency_var.get():
@@ -1130,7 +1160,68 @@ class PlannerApp(tk.Tk):
         self.load_tasks()
 
 
+    def resize_task_columns(self, event=None):
+        available_width = max(
+            self.task_tree.winfo_width() - 4,
+            1
+        )
 
+        if available_width <= 1:
+            return
+
+    # Give each column a precentage of the available width
+        title_width = int(available_width * 0.32)
+        deadline_width = int(available_width * 0.18)
+        status_width = int(available_width * 0.25)
+        dependency_width = int(available_width * 0.25)
+
+        self.task_tree.column(
+            "title",
+            width=title_width
+        )
+
+        self.task_tree.column(
+            "deadline",
+            width=deadline_width
+        )
+
+        self.task_tree.column(
+            "status",
+            width=status_width
+        )
+
+        self.task_tree.column(
+            "dependency",
+            width=dependency_width
+        )
+
+    def resize_step_columns(self, event=None):
+        available_width = max(
+            self.step_tree.winfo_width() - 4,
+            1
+        )
+
+        if available_width <= 1:
+            return
+
+        description_width = int(available_width * 0.55)
+        done_width = int(available_width * 0.10)
+        dependency_width = int(available_width * 0.35)
+
+        self.step_tree.column(
+            "description",
+            width=description_width
+        )
+
+        self.step_tree.column(
+            "done",
+            width=done_width
+        )
+
+        self.step_tree.column(
+            "dependency",
+            width=dependency_width
+        )
 
 
 
