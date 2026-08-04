@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSplitter,
+    QStyleFactory,
     QVBoxLayout,
     QWidget,
 )
@@ -21,6 +22,7 @@ from PySide6.QtWidgets import (
 from database import PlannerDatabase
 
 from widgets.task_card import TaskCard
+from widgets.step_card import StepCard
 
 from dialogs.add_task_dialog import AddTaskDialog
 
@@ -210,6 +212,39 @@ class PlannerWindow(QMainWindow):
                 outline: none;
             }
 
+            QFrame#stepCard {
+            background-color: #f8fafc;
+            border: 1px solid #d7dee8;
+            border-radius: 10px;
+            }
+
+            QCheckBox#stepCheckbox {
+            color: #0f172a;
+            font-size: 15px;
+            font-weight: 600;
+            spacing: 10px;
+            }
+
+            QCheckBox#stepCheckbox::indicator {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #64748b;
+            border-radius: 4px;
+            background-color: #ffffff;
+            }
+
+            QCheckBox#stepCheckbox::indicator:checked {
+            background-color: #2563eb;
+            border: 2px solid #2563eb;
+            image: url(assets/icons/check.svg);
+            }
+
+
+            QLabel#stepDependency {
+            color: #9a3412;
+            font-size: 13px;
+            }
+
             QListWidget#taskList::item {
             background-color: transparent;
             border: none;
@@ -234,23 +269,21 @@ class PlannerWindow(QMainWindow):
             }
 
             QListWidget#stepList::item {
-            background-color: #f8fafc;
-            color: #1e293b;
-            border: 1px solid #d7dee8;
-            border-radius: 8px;
-            padding: 12px;
+            background-color: transparent;
+            color: none;
+            padding: 0px;
             margin-bottom: 8px;
             }
 
             QListWidget#stepList::item:selected {
             background-color: #dbeafe;
-            color: #1e293b;
             border: 1px solid #2563eb;
+            border-radius: 10px;
             }
 
             QListWidget#stepList::item:hover {
             background-color: #eff6ff;
-            color: #1e293b;
+            border-radius: 10px;
             }
 
             QFrame#taskCard {
@@ -442,44 +475,57 @@ class PlannerWindow(QMainWindow):
 
         steps = self.database.get_steps(task_id)
 
-        print("Selected task ID: ", task_id)
-        print("Steps returned: ", len(steps))
-        print(steps)
-
         for step in steps:
-            done_text = (
-                "Done" 
-                if step["is_done"] 
-                else "Not done"
-            )
-
-            lines = [
-                step["description"],
-                done_text
-            ]
-
-            if step["has_dependency"]:
-                lines.append(
-                    f"Dependent on: {step['dependency']}"
-                )
-
-            display_text = "\n".join(lines)
-
-            item = QListWidgetItem(display_text)
+            item = QListWidgetItem()
 
             item.setData(
                 Qt.ItemDataRole.UserRole,
                 step["id"]
             )
 
+            card = StepCard(step)
+
+            card.done_changed.connect(
+                self.on_step_done_changed
+            )
+
             item.setSizeHint(
                 QSize(
                     0,
-                    80
+                    max(card.sizeHint().height(), 64)
                 )
             )
 
             self.step_list.addItem(item)
+
+            self.step_list.setItemWidget(
+                item,
+                card
+            )
+
+    def on_step_done_changed(
+            self,
+            step_id,
+            is_done
+    ):
+        try:
+            task_id = self.database.set_step_done(
+                step_id,
+                is_done
+            )
+        except ValueError as error:
+            QMessageBox.warning(
+                self,
+                "Unable to update step",
+                str(error)
+            )
+            return
+
+        self.load_tasks()
+        self.select_task_by_id(task_id)
+        self.load_steps(task_id)
+
+
 
     def closeEvent(self, event):
         self.database.close()
@@ -487,6 +533,10 @@ class PlannerWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
+    app.setStyle(
+        QStyleFactory.create("Fusion")
+    )
 
     window = PlannerWindow()
     window.showMaximized()

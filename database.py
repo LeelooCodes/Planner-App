@@ -515,6 +515,51 @@ class PlannerDatabase:
 
         return cursor.lastrowid
 
+    def set_step_done(self, step_id, is_done):
+        step = self.conn.execute(
+            """
+            SELECT
+                task_id
+            FROM steps
+            WHERE id = ?
+            """,
+            (step_id,)
+        ).fetchone()
+
+        if step is None:
+            raise ValueError(
+                "The selected step does not exist."
+            )
+
+        task_id = step["task_id"]
+
+        self.conn.execute(
+            """
+            UPDATE steps
+            SET is_done = ?
+            WHERE id = ?
+            """,
+            (
+                int(bool(is_done)),
+                step_id
+            )
+        )
+
+        self.conn.execute(
+            """
+            UPDATE tasks
+            SET awaiting_confirmed = 0
+            WHERE id = ?
+            """,
+            (task_id, )
+        )
+
+        self.conn.commit()
+
+        self.recalculate_task_status(task_id)
+
+        return task_id
+
     def close(self):
         self.conn.close()
 
