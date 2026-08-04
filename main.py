@@ -4,21 +4,15 @@ from PySide6.QtCore import QDate, Qt, QSize
 
 from PySide6.QtWidgets import (
     QApplication,
-    QCheckBox,
-    QDateEdit,
     QDialog,
     QDialogButtonBox,
-    QFormLayout,
     QFrame,
-    QHBoxLayout,
     QLabel,
-    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QMainWindow,
     QMessageBox,
     QPushButton,
-    QSizePolicy,
     QSplitter,
     QVBoxLayout,
     QWidget,
@@ -26,267 +20,9 @@ from PySide6.QtWidgets import (
 
 from database import PlannerDatabase
 
-class TaskCard(QFrame):
-    def __init__(self, task):
-        super().__init__()
+from widgets.task_card import TaskCard
 
-        self.task_id = task["id"]
-
-        self.setObjectName("taskCard")
-
-        self.setAttribute(
-            Qt.WidgetAttribute.WA_TransparentForMouseEvents, 
-            True
-        )
-
-        self.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Minimum
-        )
-
-        card_layout = QVBoxLayout(self)
-
-        card_layout.setContentsMargins(
-            14,
-            12,
-            14,
-            12
-        )
-
-        card_layout.setSpacing(8)
-
-        title_label = QLabel(task["title"])
-
-        title_label.setObjectName("taskCardTitle")
-        title_label.setWordWrap(True)
-
-        card_layout.addWidget(title_label)
-
-        status_row = QHBoxLayout()
-
-        status_row.setContentsMargins(
-            0,
-            0,
-            0,
-            0
-        )
-
-        status_label = QLabel(
-            task["display_status"]
-        )
-
-        status_label.setObjectName("statusBadge")
-
-        self.apply_status_style(
-            status_label,
-            task["status"]
-        )
-
-        status_row.addWidget(status_label)
-
-        status_row.addStretch()
-
-        card_layout.addLayout(status_row)
-
-        details = []
-
-        if task["deadline"]:
-            details.append(
-                f"Deadline: {task['deadline']}"
-            )
-
-        if task["dependency"]:
-            details.append(
-                f"Dependent on: {task['dependency']}"
-            )
-
-        if details:
-            details_label = QLabel(
-                "\n".join(details)
-            )
-
-            details_label.setObjectName(
-                "taskCardDetails"
-            )
-
-            details_label.setWordWrap(True)
-
-            card_layout.addWidget(details_label)
-
-    def apply_status_style(
-            self,
-            label,
-            status
-    ):
-        styles = {
-            "TBD": (
-                "#475569",
-                "#e2e8f0"
-            ),
-            "WIP": (
-                "#1d4ed8",
-                "#dbeafe"
-            ),
-            "Awaiting": (
-                "#9a3412",
-                "#ffedd5"
-            ),
-            "Completed": (
-                "#166534",
-                "#dcfce7"
-            )
-        }
-
-        text_colour, background_colour = (
-            styles.get(
-                status,
-                styles["TBD"]
-            )
-        )
-
-        label.setStyleSheet(
-            f"""
-            QLabel {{
-                color: {text_colour};
-                background-color: {background_colour};
-                border-radius: 8px;
-                padding: 4px 8px;
-                font-weight: 600;
-            }}
-            """
-        )
-
-class AddTaskDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.setWindowTitle("Add task")
-        self.setModal(True)
-        self.setMinimumWidth(460)
-
-        main_layout = QVBoxLayout(self)
-        form_layout = QFormLayout()
-
-        self.title_input = QLineEdit()
-        self.title_input.setPlaceholderText(
-            "Enter the task name"
-        )
-
-        form_layout.addRow(
-            "Task name: ",
-            self.title_input
-        )
-
-        self.has_deadline_checkbox = QCheckBox(
-            "This task has a deadline"
-        )
-
-        form_layout.addRow(
-            "",
-            self.has_deadline_checkbox
-        )
-
-        self.deadline_input = QDateEdit()
-        self.deadline_input.setCalendarPopup(True)
-        self.deadline_input.setDate(
-            QDate.currentDate()
-        )
-        self.deadline_input.setDisplayFormat(
-            "yyyy-MM-dd"
-        )
-        self.deadline_input.setEnabled(False)
-
-        form_layout.addRow(
-            "Deadline: ",
-            self.deadline_input
-        )
-
-        self.has_dependency_checkbox = QCheckBox(
-            "This task has a dependency"
-        )
-
-        form_layout.addRow(
-            "",
-            self.has_dependency_checkbox
-        )
-
-        self.dependency_input = QLineEdit()
-        self.dependency_input.setPlaceholderText(
-            "Who or what does this task depend on?"
-        )
-        self.dependency_input.setEnabled(False)
-
-        form_layout.addRow(
-            "Dependency: ",
-            self.dependency_input
-        )
-
-        main_layout.addLayout(form_layout)
-
-        button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Save
-            | QDialogButtonBox.StandardButton.Cancel
-        )
-
-        button_box.accepted.connect(
-            self.validate_and_accept
-        )
-
-        button_box.rejected.connect(
-            self.reject
-        )
-
-        main_layout.addWidget(button_box)
-
-        self.has_deadline_checkbox.toggled.connect(
-            self.deadline_input.setEnabled
-        )
-
-        self.has_dependency_checkbox.toggled.connect(
-            self.dependency_input.setEnabled
-        )
-
-    def validate_and_accept(self):
-        title = self.title_input.text().strip()
-
-        if not title:
-            QMessageBox.warning(
-                self,
-                "Missing task name",
-                "Please enter a task name."
-            )
-            return
-        if (
-            self.has_dependency_checkbox.isChecked()
-            and not self.dependency_input.text().strip()
-        ):
-            QMessageBox.warning(
-                self,
-                "Missing dependency",
-                "Please enter a dependency."
-            )
-            return
-
-        self.accept()
-
-    def get_task_data(self):
-        if self.has_deadline_checkbox.isChecked():
-            deadline = self.deadline_input.date().toString(
-                "yyyy-MM-dd"
-            )
-        else:
-            deadline = ""
-
-        if self.has_dependency_checkbox.isChecked():
-            dependency = self.dependency_input.text().strip()
-        else:
-            dependency = ""
-
-        return {
-            "title": self.title_input.text().strip(),
-            "deadline": deadline,
-            "dependency": dependency
-        }
+from dialogs.add_task_dialog import AddTaskDialog
 
 
 class PlannerWindow(QMainWindow):
@@ -538,6 +274,46 @@ class PlannerWindow(QMainWindow):
 
         self.load_tasks()
 
+    def open_add_task_dialog(self):
+        dialog = AddTaskDialog(self)
+
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        task_data = dialog.get_task_data()
+
+        try:
+            new_task_id = self.database.add_task(
+                title=task_data["title"],
+                deadline=task_data["deadline"],
+                dependency=task_data["dependency"]
+            )
+
+        except ValueError as error:
+            QMessageBox.warning(
+                self,
+                "Unable to add task",
+                str(error)
+            )
+            return
+
+        self.load_tasks()
+        self.select_task_by_id(new_task_id)
+
+    def select_task_by_id(self, task_id):
+        for row in range(
+            self.task_list.count()
+        ):
+            item = self.task_list.item(row)
+
+            item_task_id = item.data(
+                Qt.ItemDataRole.UserRole
+            )
+
+            if item_task_id == task_id:
+                self.task_list.setCurrentItem(item)
+                self.task_list.scrollToItem(item)
+                return
 
     def load_tasks(self):
         selected_task_id = None
