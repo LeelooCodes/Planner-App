@@ -1,15 +1,22 @@
 import sys
 
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import QDate, Qt, QSize
 
 from PySide6.QtWidgets import (
     QApplication,
+    QCheckBox,
+    QDateEdit,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
     QFrame,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QMainWindow,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QSplitter,
@@ -149,6 +156,139 @@ class TaskCard(QFrame):
             """
         )
 
+class AddTaskDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setWindowTitle("Add task")
+        self.setModal(True)
+        self.setMinimumWidth(460)
+
+        main_layout = QVBoxLayout(self)
+        form_layout = QFormLayout()
+
+        self.title_input = QLineEdit()
+        self.title_input.setPlaceholderText(
+            "Enter the task name"
+        )
+
+        form_layout.addRow(
+            "Task name: ",
+            self.title_input
+        )
+
+        self.has_deadline_checkbox = QCheckBox(
+            "This task has a deadline"
+        )
+
+        form_layout.addRow(
+            "",
+            self.has_deadline_checkbox
+        )
+
+        self.deadline_input = QDateEdit()
+        self.deadline_input.setCalendarPopup(True)
+        self.deadline_input.setDate(
+            QDate.currentDate()
+        )
+        self.deadline_input.setDisplayFormat(
+            "yyyy-MM-dd"
+        )
+        self.deadline_input.setEnabled(False)
+
+        form_layout.addRow(
+            "Deadline: ",
+            self.deadline_input
+        )
+
+        self.has_dependency_checkbox = QCheckBox(
+            "This task has a dependency"
+        )
+
+        form_layout.addRow(
+            "",
+            self.has_dependency_checkbox
+        )
+
+        self.dependency_input = QLineEdit()
+        self.dependency_input.setPlaceholderText(
+            "Who or what does this task depend on?"
+        )
+        self.dependency_input.setEnabled(False)
+
+        form_layout.addRow(
+            "Dependency: ",
+            self.dependency_input
+        )
+
+        main_layout.addLayout(form_layout)
+
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Save
+            | QDialogButtonBox.StandardButton.Cancel
+        )
+
+        button_box.accepted.connect(
+            self.validate_and_accept
+        )
+
+        button_box.rejected.connect(
+            self.reject
+        )
+
+        main_layout.addWidget(button_box)
+
+        self.has_deadline_checkbox.toggled.connect(
+            self.deadline_input.setEnabled
+        )
+
+        self.has_dependency_checkbox.toggled.connect(
+            self.dependency_input.setEnabled
+        )
+
+    def validate_and_accept(self):
+        title = self.title_input.text().strip()
+
+        if not title:
+            QMessageBox.warning(
+                self,
+                "Missing task name",
+                "Please enter a task name."
+            )
+            return
+        if (
+            self.has_dependency_checkbox.isChecked()
+            and not self.dependency_input.text().strip()
+        ):
+            QMessageBox.warning(
+                self,
+                "Missing dependency",
+                "Please enter a dependency."
+            )
+            return
+
+        self.accept()
+
+    def get_task_data(self):
+        if self.has_deadline_checkbox.isChecked():
+            deadline = self.deadline_input.date().toString(
+                "yyyy-MM-dd"
+            )
+        else:
+            deadline = ""
+
+        if self.has_dependency_checkbox.isChecked():
+            dependency = self.dependency_input.text().strip()
+        else:
+            dependency = ""
+
+        return {
+            "title": self.title_input.text().strip(),
+            "deadline": deadline,
+            "dependency": dependency
+        }
+
+
 class PlannerWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -209,6 +349,10 @@ class PlannerWindow(QMainWindow):
         task_layout.addWidget(self.task_heading)
 
         self.add_task_button = QPushButton("Add task")
+
+        self.add_task_button.clicked.connect(
+            self.open_add_task_dialog
+        )
 
         task_layout.addWidget(self.add_task_button)
 
@@ -449,6 +593,44 @@ class PlannerWindow(QMainWindow):
             )
         elif self.task_list.count() > 0:
             self.task_list.setCurrentRow(0)
+
+    def open_add_task_dialog(self):
+        dialog = AddTaskDialog(self)
+
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        task_data = dialog.get_task_data()
+
+        try:
+            new_task_id = self.database.add_task(
+                title=task_data["title"],
+                deadline=task_data["deadline"],
+                dependency=task_data["dependency"]
+            )
+        except ValueError as error:
+            QMessageBox.warning(
+                self,
+                "Unable to add task",
+                str(error)
+            )
+            return
+
+        self.load_tasks()
+        self.select_task_by_id(new_task_id)
+
+    def select_task_by_id(self, task_id):
+        for row in range(self.task_list.count()):
+            item = self.task_list.item(row)
+
+            item_task_id = item.data(
+                Qt.ItemDataRole.UserRole
+            )
+
+            if item_task_id == task_id:
+                self.task_list.setCurrentItem(item)
+                self.task_list.scrollToItem(item)
+                return
 
     def on_task_selected(self, current, previous):
         if current is None:
