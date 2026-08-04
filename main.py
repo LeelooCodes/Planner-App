@@ -7,7 +7,9 @@ from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFrame,
+    QHBoxLayout,
     QLabel,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QMainWindow,
@@ -137,9 +139,44 @@ class PlannerWindow(QMainWindow):
 
         step_layout.addWidget(self.step_heading)
 
-        add_step_button = QPushButton("Add step")
+        step_entry_layout = QHBoxLayout()
 
-        step_layout.addWidget(add_step_button)
+        self.new_step_input = QLineEdit()
+
+        self.new_step_input.setPlaceholderText(
+            "Type a new step and press enter."
+        )
+
+        self.add_step_button = QPushButton( "Add")
+
+        self.new_step_input.setEnabled(False)
+        self.add_step_button.setEnabled(False)
+
+        
+
+        
+
+        step_entry_layout.addWidget(
+            self.new_step_input,
+            stretch=1
+        )
+
+        step_entry_layout.addWidget(
+            self.add_step_button
+        )
+
+        step_layout.addLayout(
+            step_entry_layout
+        )
+
+        self.new_step_input.returnPressed.connect(
+            self.add_step_inline
+        )
+
+        self.add_step_button.clicked.connect(
+            self.add_step_inline
+        )
+
 
         self.step_list = QListWidget()
         self.step_list.setObjectName("stepList")
@@ -213,94 +250,113 @@ class PlannerWindow(QMainWindow):
             }
 
             QFrame#stepCard {
-            background-color: #f8fafc;
-            border: 1px solid #d7dee8;
-            border-radius: 10px;
+                background-color: #f8fafc;
+                border: 1px solid #d7dee8;
+                border-radius: 10px;
             }
 
             QCheckBox#stepCheckbox {
-            color: #0f172a;
-            font-size: 15px;
-            font-weight: 600;
-            spacing: 10px;
+                spacing: 0px;
             }
 
             QCheckBox#stepCheckbox::indicator {
-            width: 18px;
-            height: 18px;
-            border: 2px solid #64748b;
-            border-radius: 4px;
-            background-color: #ffffff;
+                width: 18px;
+                height: 18px;
+                border: 2px solid #64748b;
+                border-radius: 4px;
+                background-color: #ffffff;
+            }
+
+            QCheckBox#stepCheckbox::indicator:hover {
+                border: 2px solid #2563eb;
             }
 
             QCheckBox#stepCheckbox::indicator:checked {
-            background-color: #2563eb;
-            border: 2px solid #2563eb;
-            image: url(assets/icons/check.svg);
+                background-color: #2563eb;
+                border: 2px solid #2563eb;
+                image: url(assets/icons/check.svg);
             }
 
 
             QLabel#stepDependency {
-            color: #9a3412;
-            font-size: 13px;
+                color: #9a3412;
+                font-size: 13px;
+            }
+
+            QLabel#stepDescription {
+                color: #0f172a;
+                font-size: 15px;
+                font-weight: 600;
             }
 
             QListWidget#taskList::item {
-            background-color: transparent;
-            border: none;
-            padding: 0px;
-            margin-bottom: 8px;
+                background-color: transparent;
+                border: none;
+                padding: 0px;
+                margin-bottom: 8px;
             }
 
             QListWidget#taskList::item:selected{
-            background-color: #dbeafe;
-            border: 1px solid #2563eb;
-            border-radius: 10px;
+                background-color: #dbeafe;
+                border: 1px solid #2563eb;
+                border-radius: 10px;
             }
 
             QListWidget#taskList::item:hover{
-            background-color: #eff6ff;
-            border-radius: 10px;
+                background-color: #eff6ff;
+                border-radius: 10px;
             }
 
             QListWidget#stepList {
-            background-color: transparent;
-            color: #1e293b;
+                background-color: transparent;
+                color: #1e293b;
             }
 
             QListWidget#stepList::item {
-            background-color: transparent;
-            color: none;
-            padding: 0px;
-            margin-bottom: 8px;
+                background-color: transparent;
+                color: none;
+                padding: 0px;
+                margin-bottom: 8px;
             }
 
             QListWidget#stepList::item:selected {
-            background-color: #dbeafe;
-            border: 1px solid #2563eb;
-            border-radius: 10px;
+                background-color: #dbeafe;
+                border: 1px solid #2563eb;
+                border-radius: 10px;
             }
 
             QListWidget#stepList::item:hover {
-            background-color: #eff6ff;
-            border-radius: 10px;
+                background-color: #eff6ff;
+                border-radius: 10px;
             }
 
             QFrame#taskCard {
-            background-color: #f8fafc;
-            border: 1px solid #d7dee8;
-            border-radius: 10px;
+                background-color: #f8fafc;
+                border: 1px solid #d7dee8;
+                border-radius: 10px;
             }
 
             QLabel#taskCardTitle {
-            color: #0f172a;
-            font-size: 16px;
-            font-weight: 700;
+                color: #0f172a;
+                font-size: 16px;
+                font-weight: 700;
             }
 
             QLabel#taskCardDetails {
-            color: #64748b;
-            font-size: 13px;
+                color: #64748b;
+                font-size: 13px;
+            }
+
+            QLineEdit {
+                background-color: #ffffff;
+                color: #0f172a;
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                padding: 8px 10px;
+            }
+
+            QLineEdit:focus {
+                border: 1px solid #2563eb;
             }
             """
         )
@@ -443,6 +499,8 @@ class PlannerWindow(QMainWindow):
 
     def on_task_selected(self, current, previous):
         if current is None:
+            self.new_step_input.setEnabled(False)
+            self.add_step_button.setEnabled(False)
             self.step_heading.setText(
                 "Select a task to view its steps."
             )
@@ -468,7 +526,51 @@ class PlannerWindow(QMainWindow):
             f"Steps for: {task['title']}"
         )
 
+        self.new_step_input.setEnabled(True)
+        self.add_step_button.setEnabled(True)
+
         self.load_steps(task_id)
+
+    def add_step_inline(self):
+        current_task_item = self.task_list.currentItem()
+
+        if current_task_item is None:
+            QMessageBox.warning(
+                self,
+                "No task selected",
+                "Please select a task before adding a step."
+            )
+            return
+
+        description = self.new_step_input.text().strip()
+
+        if not description:
+            return
+
+        task_id = current_task_item.data(
+            Qt.ItemDataRole.UserRole
+        )
+
+        try:
+            self.database.add_step(
+                task_id=task_id,
+                description=description
+            )
+        except ValueError as error:
+            QMessageBox.warning(
+                self,
+                "Unable to add step",
+                str(error)
+            )
+            return
+
+        self.new_step_input.clear()
+
+        self.load_steps(task_id)
+        self.load_tasks()
+        self.select_task_by_id(task_id)
+
+        self.new_step_input.setFocus()
 
     def load_steps(self, task_id):
         self.step_list.clear()

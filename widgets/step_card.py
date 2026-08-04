@@ -1,9 +1,11 @@
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 
 from PySide6.QtWidgets import (
     QCheckBox,
     QFrame,
+    QHBoxLayout,
     QLabel,
+    QSizePolicy,
     QVBoxLayout,
 )
 
@@ -17,20 +19,23 @@ class StepCard(QFrame):
 
         self.setObjectName("stepCard")
 
-        card_layout = QVBoxLayout(self)
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
 
-        card_layout.setContentsMargins(
+        outer_layout = QHBoxLayout(self)
+
+        outer_layout.setContentsMargins(
             12,
             10,
             12,
             10
         )
 
-        card_layout.setSpacing(6)
+        outer_layout.setSpacing(10)
 
-        self.done_checkbox = QCheckBox(
-            step["description"]
-        )
+        self.done_checkbox = QCheckBox()
 
         self.done_checkbox.setObjectName(
             "stepCheckbox"
@@ -41,11 +46,47 @@ class StepCard(QFrame):
         )
 
         self.done_checkbox.setToolTip(
-            "Mark this step as done"
+            "Mark this step as done?"
         )
 
-        card_layout.addWidget(
-            self.done_checkbox
+        self.done_checkbox.setSizePolicy(
+            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.Fixed
+        )
+
+        outer_layout.addWidget(
+            self.done_checkbox,
+            alignment=Qt.AlignmentFlag.AlignTop
+        )
+
+        text_layout = QVBoxLayout()
+
+        text_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0
+        )
+
+        text_layout.setSpacing(4)
+
+        description_label = QLabel(
+            step["description"]
+        )
+
+        description_label.setObjectName(
+            "stepDescription"
+        )
+
+        description_label.setWordWrap(True)
+
+        description_label.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
+
+        text_layout.addWidget(
+            description_label
         )
 
         if step["has_dependency"]:
@@ -59,21 +100,23 @@ class StepCard(QFrame):
 
             dependency_label.setWordWrap(True)
 
-            dependency_label.setContentsMargins(
-                32,
-                0,
-                0,
-                0
+            dependency_label.setSizePolicy(
+                QSizePolicy.Policy.Expanding,
+                QSizePolicy.Policy.Minimum
             )
 
-            card_layout.addWidget(
+            text_layout.addWidget(
                 dependency_label
             )
+
+        outer_layout.addLayout(
+            text_layout,
+            stretch=1
+        )
 
         self.done_checkbox.toggled.connect(
             self.emit_done_changed
         )
-    
 
     def emit_done_changed(self, checked):
         self.done_changed.emit(
