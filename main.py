@@ -1,6 +1,6 @@
 import sys
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 
 from PySide6.QtWidgets import (
     QApplication,
@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMainWindow,
     QPushButton,
+    QSizePolicy,
     QSplitter,
     QVBoxLayout,
     QWidget,
@@ -18,6 +19,135 @@ from PySide6.QtWidgets import (
 
 from database import PlannerDatabase
 
+class TaskCard(QFrame):
+    def __init__(self, task):
+        super().__init__()
+
+        self.task_id = task["id"]
+
+        self.setObjectName("taskCard")
+
+        self.setAttribute(
+            Qt.WidgetAttribute.WA_TransparentForMouseEvents, 
+            True
+        )
+
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
+
+        card_layout = QVBoxLayout(self)
+
+        card_layout.setContentsMargins(
+            14,
+            12,
+            14,
+            12
+        )
+
+        card_layout.setSpacing(8)
+
+        title_label = QLabel(task["title"])
+
+        title_label.setObjectName("taskCardTitle")
+        title_label.setWordWrap(True)
+
+        card_layout.addWidget(title_label)
+
+        status_row = QHBoxLayout()
+
+        status_row.setContentsMargins(
+            0,
+            0,
+            0,
+            0
+        )
+
+        status_label = QLabel(
+            task["display_status"]
+        )
+
+        status_label.setObjectName("statusBadge")
+
+        self.apply_status_style(
+            status_label,
+            task["status"]
+        )
+
+        status_row.addWidget(status_label)
+
+        status_row.addStretch()
+
+        card_layout.addLayout(status_row)
+
+        details = []
+
+        if task["deadline"]:
+            details.append(
+                f"Deadline: {task['deadline']}"
+            )
+
+        if task["dependency"]:
+            details.append(
+                f"Dependent on: {task['dependency']}"
+            )
+
+        if details:
+            details_label = QLabel(
+                "\n".join(details)
+            )
+
+            details_label.setObjectName(
+                "taskCardDetails"
+            )
+
+            details_label.setWordWrap(True)
+
+            card_layout.addWidget(details_label)
+
+    def apply_status_style(
+            self,
+            label,
+            status
+    ):
+        styles = {
+            "TBD": (
+                "#475569",
+                "#e2e8f0"
+            ),
+            "WIP": (
+                "#1d4ed8",
+                "#dbeafe"
+            ),
+            "Awaiting": (
+                "#9a3412",
+                "#ffedd5"
+            ),
+            "Completed": (
+                "#166534",
+                "#dcfce7"
+            )
+        }
+
+        text_colour, background_colour = (
+            styles.get(
+                status,
+                styles["TBD"]
+            )
+        )
+
+        label.setStyleSheet(
+            f"""
+            QLabel {{
+                color: {text_colour};
+                background-color: {background_colour};
+                border-radius: 8px;
+                padding: 4px 8px;
+                font-weight: 600;
+            }}
+            """
+        )
 
 class PlannerWindow(QMainWindow):
     def __init__(self):
@@ -83,8 +213,11 @@ class PlannerWindow(QMainWindow):
         task_layout.addWidget(self.add_task_button)
 
         self.task_list = QListWidget()
+        self.task_list.setObjectName("taskList")
 
         self.task_list.setWordWrap(True)
+        self.task_list.setUniformItemSizes(False)
+
 
         task_layout.addWidget(
             self.task_list,
@@ -127,6 +260,9 @@ class PlannerWindow(QMainWindow):
         step_layout.addWidget(add_step_button)
 
         self.step_list = QListWidget()
+        self.step_list.setObjectName("stepList")
+
+        
 
         self.step_list.setWordWrap(True)
 
@@ -194,66 +330,124 @@ class PlannerWindow(QMainWindow):
                 outline: none;
             }
 
-            QListWidget::item {
-                background-color: #f8fafc;
-                color: #1e293b;
-                border: 1px solid #d7dee8;
-                border-radius: 8px;
-                padding: 12px;
-                margin-bottom: 8px;
+            QListWidget#taskList::item {
+            background-color: transparent;
+            border: none;
+            padding: 0px;
+            margin-bottom: 8px;
             }
 
-            QListWidget::item:selected {
-                background-color: #dbeafe;
-                border: 1px solid #2563eb;
+            QListWidget#taskList::item:selected{
+            background-color: #dbeafe;
+            border: 1px solid #2563eb;
+            border-radius: 10px;
             }
 
-            QListWidget::item:hover {
-                background-color: #eff6ff;
+            QListWidget#taskList::item:hover{
+            background-color: #eff6ff;
+            border-radius: 10px;
+            }
+
+            QListWidget#stepList {
+            background-color: transparent;
+            color: #1e293b;
+            }
+
+            QListWidget#stepList::item {
+            background-color: #f8fafc;
+            color: #1e293b;
+            border: 1px solid #d7dee8;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            }
+
+            QListWidget#stepList::item:selected {
+            background-color: #dbeafe;
+            color: #1e293b;
+            border: 1px solid #2563eb;
+            }
+
+            QListWidget#stepList::item:hover {
+            background-color: #eff6ff;
+            color: #1e293b;
+            }
+
+            QFrame#taskCard {
+            background-color: #f8fafc;
+            border: 1px solid #d7dee8;
+            border-radius: 10px;
+            }
+
+            QLabel#taskCardTitle {
+            color: #0f172a;
+            font-size: 16px;
+            font-weight: 700;
+            }
+
+            QLabel#taskCardDetails {
+            color: #64748b;
+            font-size: 13px;
             }
             """
         )
 
         self.load_tasks()
 
+
     def load_tasks(self):
+        selected_task_id = None
+
+        current_item = self.task_list.currentItem()
+
+        if current_item is not None:
+            selected_task_id = current_item.data(
+                Qt.ItemDataRole.UserRole
+            )
+
         self.task_list.clear()
 
         tasks = self.database.get_tasks()
 
+        item_to_select = None
+
         for task in tasks:
-            title = task["title"]
-            status = task["display_status"]
-            deadline = task["deadline"]
-            dependency = task["dependency"]
-
-            lines = [
-                title,
-                status
-            ]
-
-            if deadline:
-                lines.append(
-                    f"Deadline: {deadline}"
-                )
-
-            if dependency:
-                lines.append(
-                    f"Dependent on: {dependency}"
-                )
-
-            display_text = "\n".join(lines)
-
-            item = QListWidgetItem(display_text)
+            item = QListWidgetItem()
 
             item.setData(
                 Qt.ItemDataRole.UserRole,
                 task["id"]
             )
 
+            card = TaskCard(task)
+
+            estimated_height = max(
+                card.sizeHint().height(),
+                85
+            )
+
+            item.setSizeHint(
+                QSize(
+                    0,
+                    estimated_height
+                )
+            )
+
             self.task_list.addItem(item)
 
-        if self.task_list.count() > 0:
+            self.task_list.setItemWidget(
+                item,
+                card
+            )
+
+            if task["id"] == selected_task_id:
+                item_to_select = item
+
+        if item_to_select is not None:
+            self.task_list.setCurrentItem(
+                item_to_select
+            )
+        elif self.task_list.count() > 0:
             self.task_list.setCurrentRow(0)
 
     def on_task_selected(self, current, previous):
@@ -290,8 +484,16 @@ class PlannerWindow(QMainWindow):
 
         steps = self.database.get_steps(task_id)
 
+        print("Selected task ID: ", task_id)
+        print("Steps returned: ", len(steps))
+        print(steps)
+
         for step in steps:
-            done_text = "Done" if step["is_done"] else "Not done"
+            done_text = (
+                "Done" 
+                if step["is_done"] 
+                else "Not done"
+            )
 
             lines = [
                 step["description"],
@@ -310,6 +512,13 @@ class PlannerWindow(QMainWindow):
             item.setData(
                 Qt.ItemDataRole.UserRole,
                 step["id"]
+            )
+
+            item.setSizeHint(
+                QSize(
+                    0,
+                    80
+                )
             )
 
             self.step_list.addItem(item)
