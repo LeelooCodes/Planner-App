@@ -22,7 +22,7 @@ class PlannerDatabase:
                 deadline TEXT,
                 dependency TEXT,
                 status TEXT NOT NULL DEFAULT 'TBD',
-                awaiting_confirmed INTEGER NOT NULL DEFAULT 0,
+                dependency_resolved INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL
             )
             """
@@ -37,6 +37,7 @@ class PlannerDatabase:
                 is_done INTEGER NOT NULL DEFAULT 0,
                 has_dependency INTEGER NOT NULL DEFAULT 0,
                 dependency TEXT,
+                dependency_resolved INTEGER NOT NULL DEFAULT 0,
                 position INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (task_id) REFERENCES tasks(id)
             )
@@ -56,15 +57,6 @@ class PlannerDatabase:
                 """
                 ALTER TABLE tasks
                 ADD COLUMN status TEXT NOT NULL DEFAULT 'TBD'
-                """
-            )
-    
-        if "awaiting_confirmed" not in task_columns:
-            self.conn.execute(
-                """
-                ALTER TABLE tasks
-                ADD COLUMN awaiting_confirmed 
-                INTEGER NOT NULL DEFAULT 0
                 """
             )
     
@@ -116,6 +108,43 @@ class PlannerDatabase:
         )
     
         self.conn.commit()
+        self.migrate_database()
+
+    def migrate_database(self):
+        task_columns = {
+            row["name"]
+            for row in self.conn.execute(
+                "PRAGMA table_info(tasks)"
+            ).fetchall()
+        }
+        
+
+        if "dependency_resolved" not in task_columns:
+            self.conn.execute(
+                """
+                ALTER TABLE tasks
+                ADD COLUMN dependency_resolved
+                INTEGER NOT NULL DEFAULT 0
+                """
+            )
+
+        step_columns = {
+            row["name"]
+            for row in self.conn.execute(
+                "PRAGMA table_info(steps)"
+            ).fetchall()
+        }
+
+        if "dependency_resolved" not in step_columns:
+            self.conn.execute(
+                """
+                ALTER TABLE steps
+                ADD COLUMN dependency_resolved
+                INTEGER NOT NULL DEFAULT 0
+                """
+            )
+
+        self.conn.commit()
 
     def validate_deadline(self, deadline):
         if deadline == "":
@@ -137,11 +166,11 @@ class PlannerDatabase:
             """
             SELECT
                 dependency,
-                awaiting_confirmed
+                dependency_resolved
             FROM tasks
             WHERE id = ?
             """,
-            (task_id,)
+            (task_id, )
         ).fetchone()
 
         if task is None:
@@ -168,12 +197,13 @@ class PlannerDatabase:
                             WHEN has_dependency = 1
                                 AND dependency IS NOT NULL
                                 AND TRIM(dependency) != ''
+                                AND dependency_resolved = 0
                             THEN 1
                             ELSE 0
                         END
                     ),
                     0
-                ) AS dependent_steps
+                ) AS unresolved_step_dependencies
             
             FROM steps
             WHERE task_id = ?
@@ -183,16 +213,20 @@ class PlannerDatabase:
 
         total_steps = step_summary["total_steps"]
         completed_steps = step_summary["completed_steps"]
-        dependent_steps = step_summary["dependent_steps"]
 
-        task_has_dependency = bool(
-            task["dependency"]
-            and task["dependency"].strip()
+        unresolved_step_dependencies = (
+            step_summary["unresolved_step_dependencies"]
         )
 
-        has_any_dependency = (
-            task_has_dependency
-            or dependent_steps > 0
+        task_has_unresolved_dependency = bool(
+            task["dependency"]
+            and task["dependency"].strip()
+            and not bool(task["dependency_resolved"])
+        )
+
+        has_unresolved_dependency = (
+            task_has_unresolved_dependency
+            or unresolved_step_dependencies > 0
         )
 
         if total_steps == 0:
@@ -204,11 +238,8 @@ class PlannerDatabase:
         elif completed_steps < total_steps:
             new_status = "WIP"
 
-        elif has_any_dependency:
-            if task["awaiting_confirmed"]:
-                new_status = "Completed"
-            else:
-                new_status = "Awaiting"
+        elif has_unresolved_dependency:
+            new_status = "Awaiting"
 
         else:
             new_status = "Completed"
@@ -249,7 +280,7 @@ class PlannerDatabase:
                 tasks.deadline,
                 tasks.dependency,
                 tasks.status,
-                tasks.awaiting_confirmed,
+                tasks.dependency_resolved,
                 tasks.created_at,
 
                 COUNT(steps.id) AS total_steps,
@@ -275,7 +306,7 @@ class PlannerDatabase:
                 tasks.deadline,
                 tasks.dependency,
                 tasks.status,
-                tasks.awaiting_confirmed,
+                tasks.dependency_resolved,
                 tasks.created_at
             
             ORDER BY
@@ -314,8 +345,8 @@ class PlannerDatabase:
                     "dependency": task["dependency"] or "",
                     "status": status,
                     "display_status": display_status,
-                    "awaiting_confirmed": bool(
-                        task["awaiting_confirmed"]
+                    "dependency_resolved": bool(
+                        task["dependency_resolved"]
                     ),
                     "created_at": task["created_at"],
                     "total_steps": total_steps,
@@ -334,7 +365,7 @@ class PlannerDatabase:
                 deadline,
                 dependency,
                 status,
-                awaiting_confirmed,
+                dependency_resolved,
                 created_at
             FROM tasks
             WHERE id = ?
@@ -351,8 +382,8 @@ class PlannerDatabase:
             "deadline": task["deadline"] or "",
             "dependency": task["dependency"] or "",
             "status": task["status"],
-            "awaiting_confirmed": bool(
-                task["awaiting_confirmed"]
+            "dependency_resolved": bool(
+                task["dependency_resolved"]
             ),
             "created_at": task["created_at"]
         }
@@ -367,6 +398,7 @@ class PlannerDatabase:
                 is_done,
                 has_dependency,
                 dependency,
+                dependency_resolved,
                 position
             FROM steps
             WHERE task_id = ?
@@ -390,6 +422,9 @@ class PlannerDatabase:
                         step["has_dependency"]
                     ),
                     "dependency": step["dependency"] or "",
+                    "dependency_resolved": bool(
+                        step["dependency_resolved"]
+                    ),
                     "position": step["position"]
                 }
             )
@@ -420,8 +455,8 @@ class PlannerDatabase:
                 title,
                 deadline,
                 dependency,
+                dependency_resolved,
                 status,
-                awaiting_confirmed,
                 created_at
             ) 
             VALUES (?, ?, ?, ?, ?, ?)
@@ -430,8 +465,8 @@ class PlannerDatabase:
                 title,
                 deadline if deadline else None,
                 dependency if dependency else None,
-                "TBD",
                 0,
+                "TBD",
                 datetime.now().isoformat(timespec="seconds")
             )
         )
@@ -487,9 +522,10 @@ class PlannerDatabase:
                 is_done,
                 has_dependency,
                 dependency,
+                dependency_resolved,
                 position
             ) 
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 task_id,
@@ -497,17 +533,9 @@ class PlannerDatabase:
                 int(bool(is_done)),
                 int(bool(has_dependency)),
                 dependency if has_dependency else None,
+                0,
                 next_position
             )
-        )
-
-        self.conn.execute(
-            """
-            UPDATE tasks
-            SET awaiting_confirmed = 0
-            WHERE id = ?
-            """,
-            (task_id,)
         )
 
         self.conn.commit()
@@ -518,12 +546,11 @@ class PlannerDatabase:
     def set_step_done(self, step_id, is_done):
         step = self.conn.execute(
             """
-            SELECT
-                task_id
+            SELECT task_id
             FROM steps
             WHERE id = ?
             """,
-            (step_id,)
+            (step_id, )
         ).fetchone()
 
         if step is None:
@@ -545,15 +572,6 @@ class PlannerDatabase:
             )
         )
 
-        self.conn.execute(
-            """
-            UPDATE tasks
-            SET awaiting_confirmed = 0
-            WHERE id = ?
-            """,
-            (task_id, )
-        )
-
         self.conn.commit()
 
         self.recalculate_task_status(task_id)
@@ -569,45 +587,11 @@ if __name__ == "__main__":
 
     print("Database connection successful.")
     print("Tables created or verified successfully.")
+    print("Dependency-resolution migration successful.")
     print("Task statuses recalculated successfully.")
 
-    try:
-        new_task_id = database.add_task(
-            title="Database layer test",
-            deadline="2026-08-15",
-            dependency=""
-        )
+    tasks = database.get_tasks()
 
-        print(
-            f"Created test task with ID: {new_task_id}"
-        )
+    print(f"Tasks found: {len(tasks)}")
 
-        first_step_id = database.add_step(
-            task_id=new_task_id,
-            description="Create task through database.py"
-        )
-
-        second_step_id = database.add_step(
-            task_id=new_task_id,
-            description="Test a dependent step",
-            has_dependency=True,
-            dependency="Waiting for test approval"
-        )
-
-        print(
-            "Created test steps:",
-            first_step_id,
-            second_step_id
-        )
-
-        task = database.get_task(new_task_id)
-        steps = database.get_steps(new_task_id)
-
-        print("Task: ", task)
-        print("Steps: ", steps)
-
-    except ValueError as error:
-        print("Validation Error: ", error)
-
-    finally:
-        database.close()
+    database.close()

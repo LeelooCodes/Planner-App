@@ -314,7 +314,7 @@ class PlannerWindow(QMainWindow):
 
             QListWidget#stepList::item {
                 background-color: transparent;
-                color: none;
+                color: #1e293b;
                 padding: 0px;
                 margin-bottom: 8px;
             }
@@ -459,44 +459,6 @@ class PlannerWindow(QMainWindow):
         elif self.task_list.count() > 0:
             self.task_list.setCurrentRow(0)
 
-    def open_add_task_dialog(self):
-        dialog = AddTaskDialog(self)
-
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-
-        task_data = dialog.get_task_data()
-
-        try:
-            new_task_id = self.database.add_task(
-                title=task_data["title"],
-                deadline=task_data["deadline"],
-                dependency=task_data["dependency"]
-            )
-        except ValueError as error:
-            QMessageBox.warning(
-                self,
-                "Unable to add task",
-                str(error)
-            )
-            return
-
-        self.load_tasks()
-        self.select_task_by_id(new_task_id)
-
-    def select_task_by_id(self, task_id):
-        for row in range(self.task_list.count()):
-            item = self.task_list.item(row)
-
-            item_task_id = item.data(
-                Qt.ItemDataRole.UserRole
-            )
-
-            if item_task_id == task_id:
-                self.task_list.setCurrentItem(item)
-                self.task_list.scrollToItem(item)
-                return
-
     def on_task_selected(self, current, previous):
         if current is None:
             self.new_step_input.setEnabled(False)
@@ -532,6 +494,7 @@ class PlannerWindow(QMainWindow):
         self.load_steps(task_id)
 
     def add_step_inline(self):
+
         current_task_item = self.task_list.currentItem()
 
         if current_task_item is None:
@@ -566,7 +529,6 @@ class PlannerWindow(QMainWindow):
 
         self.new_step_input.clear()
 
-        self.load_steps(task_id)
         self.load_tasks()
         self.select_task_by_id(task_id)
 
