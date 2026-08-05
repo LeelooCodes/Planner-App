@@ -4,6 +4,7 @@ from PySide6.QtCore import QDate, Qt, QSize
 
 from PySide6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QDialog,
     QDialogButtonBox,
     QFrame,
@@ -27,6 +28,7 @@ from widgets.task_card import TaskCard
 from widgets.step_card import StepCard
 
 from dialogs.add_task_dialog import AddTaskDialog
+from dialogs.dependency_dialog import DependencyDialog
 
 
 class PlannerWindow(QMainWindow):
@@ -34,6 +36,8 @@ class PlannerWindow(QMainWindow):
         super().__init__()
 
         self.database = PlannerDatabase()
+
+        self.pending_step_dependency = ""
 
         self.setWindowTitle("Task Planner")
 
@@ -149,8 +153,13 @@ class PlannerWindow(QMainWindow):
 
         self.add_step_button = QPushButton( "Add")
 
+        self.add_step_dependency_checkbox = QCheckBox(
+            "Add dependency"
+        )
+
         self.new_step_input.setEnabled(False)
         self.add_step_button.setEnabled(False)
+        self.add_step_dependency_checkbox.setEnabled(False)
 
         
 
@@ -159,6 +168,10 @@ class PlannerWindow(QMainWindow):
         step_entry_layout.addWidget(
             self.new_step_input,
             stretch=1
+        )
+
+        step_entry_layout.addWidget(
+            self.add_step_dependency_checkbox
         )
 
         step_entry_layout.addWidget(
@@ -175,6 +188,10 @@ class PlannerWindow(QMainWindow):
 
         self.add_step_button.clicked.connect(
             self.add_step_inline
+        )
+
+        self.add_step_dependency_checkbox.toggled.connect(
+            self.on_add_step_dependency_toggled
         )
 
 
@@ -463,6 +480,13 @@ class PlannerWindow(QMainWindow):
         if current is None:
             self.new_step_input.setEnabled(False)
             self.add_step_button.setEnabled(False)
+            self.add_step_dependency_checkbox.setEnabled(False)
+
+            self.pending_step_dependency = ""
+
+            self.add_step_dependency_checkbox.blockSignals(True)
+            self.add_step_dependency_checkbox.setChecked(False)
+            self.add_step_dependency_checkbox.blockSignals(False)
             self.step_heading.setText(
                 "Select a task to view its steps."
             )
@@ -490,8 +514,43 @@ class PlannerWindow(QMainWindow):
 
         self.new_step_input.setEnabled(True)
         self.add_step_button.setEnabled(True)
+        self.add_step_dependency_checkbox.setEnabled(True)
 
         self.load_steps(task_id)
+
+    def on_add_step_dependency_toggled(self, checked):
+        if not checked:
+            self.pending_step_dependency = ""
+            return
+
+        previous_dependency = self.pending_step_dependency
+
+        dialog = DependencyDialog(
+            parent=self,
+            dependency=previous_dependency,
+            title="Add step dependency"
+        )
+
+        result = dialog.exec()
+
+        if result == QDialog.DialogCode.Accepted:
+            self.pending_step_dependency = (
+                dialog.get_dependency()
+            )
+            return
+
+        # The dialog was cancelled or closed.
+        #
+        # Restore the state that existed before it opened.
+        # If there was no previously saved dependency, the
+        # checkbox should return to unchecked.
+
+        if not previous_dependency:
+            self.add_step_dependency_checkbox.blockSignals(True)
+            self.add_step_dependency_checkbox.setChecked(False)
+            self.add_step_dependency_checkbox.blockSignals(False)
+        else:
+            self.pending_step_dependency = previous_dependency
 
     def add_step_inline(self):
 
@@ -515,9 +574,16 @@ class PlannerWindow(QMainWindow):
         )
 
         try:
+            has_dependency = (
+                self.add_step_dependency_checkbox.isChecked()
+                and bool(self.pending_step_dependency)
+            )
+
             self.database.add_step(
                 task_id=task_id,
-                description=description
+                description=description,
+                has_dependency=has_dependency,
+                dependency=self.pending_step_dependency
             )
         except ValueError as error:
             QMessageBox.warning(
@@ -528,6 +594,12 @@ class PlannerWindow(QMainWindow):
             return
 
         self.new_step_input.clear()
+
+        self.pending_step_dependency = ""
+
+        self.add_step_dependency_checkbox.blockSignals(True)
+        self.add_step_dependency_checkbox.setChecked(False)
+        self.add_step_dependency_checkbox.blockSignals(False)
 
         self.load_tasks()
         self.select_task_by_id(task_id)
