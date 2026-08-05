@@ -375,6 +375,33 @@ class PlannerWindow(QMainWindow):
             QLineEdit:focus {
                 border: 1px solid #2563eb;
             }
+
+            QToolButton#stepEditButton,
+            QToolButton#stepDeleteButton {
+                background-color: transparent;
+                border: 1px solid transparent;
+                border-radius: 8px;
+                padding: 4px;
+            }
+
+            QToolButton#stepEditButton:hover {
+                background-color: #dbeafe;
+                border: 1px solid #bfdbfe;
+            }
+
+            QToolButton#stepEditButton:pressed {
+                background-color: #bfdbfe;
+            }
+
+            QToolButton#stepDeleteButton:hover {
+                background-color: #fee2e2;
+                border: 1px solid #fecaca;
+            }
+
+            QToolButton#stepDeleteButton:pressed {
+                background-color: #fecaca
+            }
+
             """
         )
 

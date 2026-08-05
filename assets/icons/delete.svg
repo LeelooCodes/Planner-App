@@ -1,0 +1,48 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+>
+    <!-- Bin body -->
+    <path
+        d="M7 8.5H17L16.3 18C16.2 19.1 15.3 20 14.2 20H9.8C8.7 20 7.8 19.1 7.7 18L7 8.5Z"
+        fill="#FEE2E2"
+        stroke="#DC2626"
+        stroke-width="1.8"
+        stroke-linejoin="round"
+    />
+
+    <!-- Open lid -->
+    <g transform="translate(0 -0.6) rotate(20 17.2 8.5)">
+        <path
+            d="M5.5 7H18.5"
+            stroke="#DC2626"
+            stroke-width="1.8"
+            stroke-linecap="round"
+        />
+
+        <path
+            d="M9.5 7V5.8C9.5 5.36 9.86 5 10.3 5H13.7C14.14 5 14.5 5.36 14.5 5.8V7"
+            stroke="#DC2626"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+        />
+    </g>
+
+    <!-- Bin slats -->
+    <path
+        d="M10 11V16.5"
+        stroke="#DC2626"
+        stroke-width="1.6"
+        stroke-linecap="round"
+    />
+
+    <path
+        d="M14 11V16.5"
+        stroke="#DC2626"
+        stroke-width="1.6"
+        stroke-linecap="round"
+    />
+</svg>

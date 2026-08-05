@@ -1,4 +1,5 @@
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtGui import QIcon
 
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -6,11 +7,14 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QSizePolicy,
+    QToolButton,
     QVBoxLayout,
 )
 
 class StepCard(QFrame):
     done_changed = Signal(int, bool)
+    edit_requested = Signal(int)
+    delete_requested = Signal(int)
 
     def __init__(self, step):
         super().__init__()
@@ -114,12 +118,107 @@ class StepCard(QFrame):
             stretch=1
         )
 
+        action_layout = QHBoxLayout()
+
+        action_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0
+        )
+
+        action_layout.setSpacing(4)
+
+        self.edit_button = QToolButton()
+
+        self.edit_button.setObjectName(
+            "stepEditButton"
+        )
+
+        self.edit_button.setIcon(
+            QIcon("assets/icons/edit.svg")
+        )
+
+        self.edit_button.setIconSize(
+            QSize(20, 20)
+        )
+
+        self.edit_button.setFixedSize(
+            32,
+            32
+        )
+
+        self.edit_button.setToolTip(
+            "Edit this step"
+        )
+
+        self.edit_button.setAccessibleName(
+            "Edit step"
+        )
+
+        self.delete_button = QToolButton()
+
+        self.delete_button.setObjectName(
+            "stepDeleteButton"
+        )
+
+        self.delete_button.setIcon(
+            QIcon("assets/icons/delete.svg")
+        )
+
+        self.delete_button.setIconSize(
+            QSize(20, 20)
+        )
+
+        self.delete_button.setFixedSize(
+            32,
+            32
+        )
+
+        self.delete_button.setToolTip(
+            "Delete this step"
+        )
+
+        self.delete_button.setAccessibleName(
+            "Delete step"
+        )
+
+        action_layout.addWidget(
+            self.edit_button
+        )
+
+        action_layout.addWidget(
+            self.delete_button
+        )
+
+        outer_layout.addLayout(
+            action_layout
+        )
+
         self.done_checkbox.toggled.connect(
             self.emit_done_changed
+        )
+
+        self.edit_button.clicked.connect(
+            self.emit_edit_requested
+        )
+
+        self.delete_button.clicked.connect(
+            self.emit_delete_requested
         )
 
     def emit_done_changed(self, checked):
         self.done_changed.emit(
             self.step_id,
             checked
+        )
+
+    def emit_edit_requested(self):
+        self.edit_requested.emit(
+            self.step_id
+        )
+
+    def emit_delete_requested(self):
+        self.delete_requested.emit(
+            self.step_id
         )
