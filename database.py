@@ -431,6 +431,42 @@ class PlannerDatabase:
 
         return step_list
 
+    def get_step(self, step_id):
+        step = self.conn.execute(
+            """
+            SELECT
+                id,
+                task_id,
+                description,
+                is_done,
+                has_dependency,
+                dependency,
+                dependency_resolved,
+                position
+            FROM steps
+            WHERE id = ?
+            """,
+            (step_id, )
+        ).fetchone()
+
+        if step is None:
+            return None
+
+        return {
+            "id": step["id"],
+            "task_id": step["task_id"],
+            "description": step["description"],
+            "is_done": bool(step["is_done"]),
+            "has_dependency": bool(
+                step["has_dependency"]
+            ),
+            "dependency": step["dependency"] or "",
+            "dependency_resolved": bool(
+                step["dependency_resolved"]
+            ),
+            "position": step["position"]
+        }
+
     def add_task(
         self,
         title,
@@ -542,6 +578,105 @@ class PlannerDatabase:
         self.recalculate_task_status(task_id)
 
         return cursor.lastrowid
+
+    def update_step(
+        self,
+        step_id,
+        description,
+        has_dependency=False,
+        dependency=""
+    ):
+        description = description.strip()
+        dependency = dependency.strip()
+
+        if description == "":
+            raise ValueError(
+                "Step description cannot be empty."
+            )
+
+        if has_dependency and dependency == "":
+            raise ValueError(
+                "Please enter who or what "
+                "the step is dependent on."
+            )
+
+        existing_step = self.get_step(step_id)
+
+        if existing_step is None:
+            raise ValueError(
+                "The selected step does not exist."
+            )
+
+        task_id = existing_step["task_id"]
+
+        dependency_changed = (
+            existing_step["has_dependency"]
+            != bool(has_dependency)
+            or existing_step["dependency"]
+            != dependency
+        )
+
+        if not has_dependency:
+            saved_dependency = None
+            dependency_resolved = 0
+        else:
+            saved_dependency = dependency
+
+            if dependency_changed:
+                dependency_resolved = 0
+            else:
+                dependency_resolved = int(
+                    existing_step["dependency_resolved"]
+                )
+
+        self.conn.execute(
+            """
+            UPDATE steps
+            SET
+                description = ?,
+                has_dependency = ?,
+                dependency = ?,
+                dependency_resolved = ?
+            WHERE id = ?
+            """,
+            (
+                description,
+                int(bool(has_dependency)),
+                saved_dependency,
+                dependency_resolved,
+                step_id
+            )
+        )
+
+        self.conn.commit()
+
+        self.recalculate_task_status(task_id)
+
+        return task_id
+
+    def delete_step(self, step_id):
+        step = self.get_step(step_id)
+
+        if step is None:
+            raise ValueError(
+                "The selected step does not exist."
+            )
+
+        task_id = step["task_id"]
+
+        self.conn.execute(
+            """
+            DELETE FROM steps
+            WHERE id = ?
+            """,
+            (step_id, )
+        )
+
+        self.conn.commit()
+
+        self.recalculate_task_status(task_id)
+
+        return task_id
 
     def set_step_done(self, step_id, is_done):
         step = self.conn.execute(

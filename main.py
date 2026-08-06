@@ -29,6 +29,7 @@ from widgets.step_card import StepCard
 
 from dialogs.add_task_dialog import AddTaskDialog
 from dialogs.dependency_dialog import DependencyDialog
+from dialogs.edit_step_dialog import EditStepDialog
 
 
 class PlannerWindow(QMainWindow):
@@ -652,6 +653,14 @@ class PlannerWindow(QMainWindow):
                 self.on_step_done_changed
             )
 
+            card.edit_requested.connect(
+                self.on_step_edit_requested
+            )
+
+            card.delete_requested.connect(
+                self.on_step_delete_requested
+            )
+
             item.setSizeHint(
                 QSize(
                     0,
@@ -665,6 +674,95 @@ class PlannerWindow(QMainWindow):
                 item,
                 card
             )
+
+    def on_step_edit_requested(self, step_id):
+        step = self.database.get_step(step_id)
+
+        if step is None:
+            QMessageBox.warning(
+                self,
+                "Unable to edit step",
+                "The selected step no longer exists."
+            )
+            return
+
+        dialog = EditStepDialog(
+            step,
+            self
+        )
+
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        step_data = dialog.get_step_data()
+
+        try:
+            task_id = self.database.update_step(
+                step_id=step_id,
+                description=step_data["description"],
+                has_dependency=(
+                    step_data["has_dependency"]
+                ),
+                dependency=step_data["dependency"]
+            )
+        except ValueError as error:
+            QMessageBox.warning(
+                self,
+                "Unable to edit step",
+                str(error)
+            )
+            return
+
+        self.load_tasks()
+        self.select_task_by_id(task_id)
+        self.load_steps(task_id)
+
+    def on_step_delete_requested(self, step_id):
+        step = self.database.get_step(step_id)
+
+        if step is None:
+            QMessageBox.warning(
+                self,
+                "Unable to delete step",
+                "The selected step no longer exists."
+            )
+            return
+
+        confirmation = QMessageBox.question(
+            self,
+            "Delete step?",
+            (
+                f"Are you sure you want to delete "
+                f"the step:\n\n"
+                f"“{step['description']}”?\n\n"
+                f"This action cannot be undone."
+            ),
+            (
+                QMessageBox.StandardButton.Yes
+                | QMessageBox.StandardButton.No
+            ),
+            QMessageBox.StandardButton.No
+        )
+
+        if confirmation != QMessageBox.StandardButton.Yes:
+            return
+
+        try:
+            task_id = self.database.delete_step(
+                step_id
+            )
+
+        except ValueError as error:
+            QMessageBox.warning(
+                self,
+                "Unable to delete step",
+                str(error)
+            )
+            return
+
+        self.load_tasks()
+        self.select_task_by_id(task_id)
+        self.load_steps(task_id)
 
     def on_step_done_changed(
             self,
