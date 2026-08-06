@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 
 class StepCard(QFrame):
     done_changed = Signal(int, bool)
+    dependency_resolved_changed = Signal(int, bool)
     edit_requested = Signal(int)
     delete_requested = Signal(int)
 
@@ -72,7 +73,7 @@ class StepCard(QFrame):
             0
         )
 
-        text_layout.setSpacing(4)
+        text_layout.setSpacing(6)
 
         description_label = QLabel(
             step["description"]
@@ -94,23 +95,63 @@ class StepCard(QFrame):
         )
 
         if step["has_dependency"]:
-            dependency_label = QLabel(
-                f"Dependent on: {step['dependency']}"
+            dependency_row = QHBoxLayout()
+
+            dependency_row.setContentsMargins(
+                0,
+                2,
+                0,
+                0
             )
 
-            dependency_label.setObjectName(
-                "stepDependency"
+            dependency_row.setSpacing(7)
+
+            self.dependency_resolved_checkbox = QCheckBox()
+
+            self.dependency_resolved_checkbox.setObjectName(
+                "stepDependencyResolvedCheckbox"
             )
 
-            dependency_label.setWordWrap(True)
+            self.dependency_resolved_checkbox.setChecked(
+                step["dependency_resolved"]
+            )
 
-            dependency_label.setSizePolicy(
+            self.dependency_resolved_checkbox.setToolTip(
+                "Mark this dependency as resolved"
+            )
+
+            self.dependency_resolved_checkbox.setSizePolicy(
+                QSizePolicy.Policy.Fixed,
+                QSizePolicy.Policy.Fixed
+            )
+
+            dependency_text_label = QLabel(
+                f"Waiting for: {step['dependency']}"
+            )
+
+            dependency_text_label.setObjectName(
+                "stepDependencyText"
+            )
+
+            dependency_text_label.setWordWrap(True)
+
+            dependency_text_label.setSizePolicy(
                 QSizePolicy.Policy.Expanding,
                 QSizePolicy.Policy.Minimum
             )
 
-            text_layout.addWidget(
-                dependency_label
+            dependency_row.addWidget(
+                self.dependency_resolved_checkbox,
+                alignment=Qt.AlignmentFlag.AlignTop
+            )
+
+            dependency_row.addWidget(
+                dependency_text_label,
+                stretch=1
+            )
+
+            text_layout.addLayout(
+                dependency_row
             )
 
         outer_layout.addLayout(
@@ -199,6 +240,11 @@ class StepCard(QFrame):
             self.emit_done_changed
         )
 
+        if step["has_dependency"]:
+            self.dependency_resolved_checkbox.toggled.connect(
+                self.emit_dependency_resolved_changed
+            )
+
         self.edit_button.clicked.connect(
             self.emit_edit_requested
         )
@@ -209,6 +255,15 @@ class StepCard(QFrame):
 
     def emit_done_changed(self, checked):
         self.done_changed.emit(
+            self.step_id,
+            checked
+        )
+
+    def emit_dependency_resolved_changed(
+            self,
+            checked
+    ):
+        self.dependency_resolved_changed.emit(
             self.step_id,
             checked
         )

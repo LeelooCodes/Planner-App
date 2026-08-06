@@ -295,8 +295,29 @@ class PlannerWindow(QMainWindow):
                 image: url(assets/icons/check.svg);
             }
 
+            QCheckBox#stepDependencyResolvedCheckbox {
+                spacing: 0px;
+            }
 
-            QLabel#stepDependency {
+            QCheckBox#stepDependencyResolvedCheckbox::indicator {
+                width: 16px;
+                height: 16px;
+                border: 2px solid #c2410c;
+                border-radius: 4px;
+                background-color: #ffffff;
+            }
+
+            QCheckBox#stepDependencyResolvedCheckbox::indicator:hover {
+                border: 2px solid #ea580c;
+            }
+
+            QCheckBox#stepDependencyResolvedCheckbox::indicator:checked {
+                background-color: #16a34a;
+                border: 2px solid #16a34a;
+                image: url(assets/icons/check.svg);
+            }
+
+            QLabel#stepDependencyText {
                 color: #9a3412;
                 font-size: 13px;
             }
@@ -653,6 +674,10 @@ class PlannerWindow(QMainWindow):
                 self.on_step_done_changed
             )
 
+            card.dependency_resolved_changed.connect(
+                self.on_step_dependency_resolved_changed
+            )
+
             card.edit_requested.connect(
                 self.on_step_edit_requested
             )
@@ -756,6 +781,31 @@ class PlannerWindow(QMainWindow):
             QMessageBox.warning(
                 self,
                 "Unable to delete step",
+                str(error)
+            )
+            return
+
+        self.load_tasks()
+        self.select_task_by_id(task_id)
+        self.load_steps(task_id)
+
+    def on_step_dependency_resolved_changed(
+            self,
+            step_id,
+            is_resolved
+    ):
+        try:
+            task_id = (
+                self.database
+                .set_step_dependency_resolved(
+                    step_id,
+                    is_resolved
+                )
+            )
+        except ValueError as error:
+            QMessageBox.warning(
+                self,
+                "Unable to update dependency",
                 str(error)
             )
             return
