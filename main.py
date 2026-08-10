@@ -686,10 +686,15 @@ class PlannerWindow(QMainWindow):
                 self.on_step_delete_requested
             )
 
+            estimated_height = max(
+                card.sizeHint().height() + 12,
+                72
+            )
+
             item.setSizeHint(
                 QSize(
                     0,
-                    max(card.sizeHint().height(), 64)
+                    estimated_height
                 )
             )
 

@@ -59,21 +59,41 @@ class StepCard(QFrame):
             QSizePolicy.Policy.Fixed
         )
 
-        outer_layout.addWidget(
-            self.done_checkbox,
-            alignment=Qt.AlignmentFlag.AlignTop
+        self.done_checkbox.setMinimumSize(
+            22,
+            22
         )
 
-        text_layout = QVBoxLayout()
+        content_layout = QVBoxLayout()
 
-        text_layout.setContentsMargins(
+        content_layout.setContentsMargins(
             0,
             0,
             0,
             0
         )
 
-        text_layout.setSpacing(6)
+        content_layout.setSpacing(6)
+
+        step_row = QHBoxLayout()
+
+        step_row.setContentsMargins(
+            0,
+            0,
+            0,
+            0
+        )
+
+        step_row.setSpacing(10)
+
+        step_row.setAlignment(
+            Qt.AlignmentFlag.AlignVCenter
+        )
+
+        step_row.addWidget(
+            self.done_checkbox,
+            alignment=Qt.AlignmentFlag.AlignVCenter
+        )
 
         description_label = QLabel(
             step["description"]
@@ -90,16 +110,22 @@ class StepCard(QFrame):
             QSizePolicy.Policy.Minimum
         )
 
-        text_layout.addWidget(
-            description_label
+        step_row.addWidget(
+            description_label,
+            stretch=1,
+            alignment=Qt.AlignmentFlag.AlignVCenter
         )
 
-        if step["has_dependency"]:
+        content_layout.addLayout(
+            step_row
+        )
+
+        if step ["has_dependency"]:
             dependency_row = QHBoxLayout()
 
             dependency_row.setContentsMargins(
+                28,
                 0,
-                2,
                 0,
                 0
             )
@@ -117,12 +143,12 @@ class StepCard(QFrame):
             )
 
             self.dependency_resolved_checkbox.setToolTip(
-                "Mark this dependency as resolved"
+                "Mark this dependency as resolved."
             )
 
-            self.dependency_resolved_checkbox.setSizePolicy(
-                QSizePolicy.Policy.Fixed,
-                QSizePolicy.Policy.Fixed
+            self.dependency_resolved_checkbox.setFixedSize(
+                20,
+                20
             )
 
             dependency_text_label = QLabel(
@@ -142,21 +168,27 @@ class StepCard(QFrame):
 
             dependency_row.addWidget(
                 self.dependency_resolved_checkbox,
-                alignment=Qt.AlignmentFlag.AlignTop
+                alignment=Qt.AlignmentFlag.AlignVCenter
             )
 
             dependency_row.addWidget(
                 dependency_text_label,
-                stretch=1
+                stretch=1,
+                alignment=Qt.AlignmentFlag.AlignVCenter
             )
 
-            text_layout.addLayout(
+            content_layout.addLayout(
                 dependency_row
             )
 
         outer_layout.addLayout(
-            text_layout,
+            content_layout,
             stretch=1
+        )
+
+        outer_layout.setAlignment(
+            content_layout,
+            Qt.AlignmentFlag.AlignVCenter
         )
 
         action_layout = QHBoxLayout()
