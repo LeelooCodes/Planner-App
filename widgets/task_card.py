@@ -1,25 +1,26 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtGui import QIcon
 
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
     QSizePolicy,
+    QToolButton,
     QVBoxLayout,
 )
 
 class TaskCard(QFrame):
+    selected_requested = Signal(int)
+    edit_requested = Signal(int)
+    delete_requested = Signal(int)
+
     def __init__(self, task):
         super().__init__()
 
         self.task_id = task["id"]
 
         self.setObjectName("taskCard")
-
-        self.setAttribute(
-            Qt.WidgetAttribute.WA_TransparentForMouseEvents, 
-            True
-        )
 
         self.setSizePolicy(
             QSizePolicy.Policy.Expanding,
@@ -37,11 +38,104 @@ class TaskCard(QFrame):
 
         card_layout.setSpacing(8)
 
-        title_label = QLabel(task["title"])
-        title_label.setObjectName("taskCardTitle")
+        title_row = QHBoxLayout()
+
+        title_row.setContentsMargins(
+            0,
+            0,
+            0,
+            0
+        )
+
+        title_row.setSpacing(8)
+
+        title_label = QLabel(
+            task["title"]
+        )
+
+        title_label.setObjectName(
+            "taskCardTitle"
+        )
+
         title_label.setWordWrap(True)
 
-        card_layout.addWidget(title_label)
+        title_label.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
+
+        title_row.addWidget(
+            title_label,
+            stretch=1
+        )
+
+        self.edit_button = QToolButton()
+
+        self.edit_button.setObjectName(
+            "taskEditButton"
+        )
+
+        self.edit_button.setIcon(
+            QIcon("assets/icons/edit.svg")
+        )
+
+        self.edit_button.setIconSize(
+            QSize(20, 20)
+        )
+
+        self.edit_button.setFixedSize(
+            32,
+            32
+        )
+
+        self.edit_button.setToolTip(
+            "Edit this task"
+        )
+
+        self.edit_button.setAccessibleName(
+            "Edit task"
+        )
+
+        self.delete_button = QToolButton()
+
+        self.delete_button.setObjectName(
+            "taskDeleteButton"
+        )
+
+        self.delete_button.setIcon(
+            QIcon("assets/icons/delete.svg")
+        )
+
+        self.delete_button.setIconSize(
+            QSize(20, 20)
+        )
+
+        self.delete_button.setFixedSize(
+            32,
+            32
+        )
+
+        self.delete_button.setToolTip(
+            "Delete this task"
+        )
+
+        self.delete_button.setAccessibleName(
+            "Delete task"
+        )
+
+        title_row.addWidget(
+            self.edit_button,
+            alignment=Qt.AlignmentFlag.AlignTop
+        )
+
+        title_row.addWidget(
+            self.delete_button,
+            alignment=Qt.AlignmentFlag.AlignTop
+        )
+
+        card_layout.addLayout(
+            title_row
+        )
 
         status_row = QHBoxLayout()
         status_row.setContentsMargins(
@@ -92,6 +186,32 @@ class TaskCard(QFrame):
             details_label.setWordWrap(True)
 
             card_layout.addWidget(details_label)
+
+        self.edit_button.clicked.connect(
+            self.emit_edit_requested
+        )
+
+        self.delete_button.clicked.connect(
+            self.emit_delete_requested
+        )
+
+    def emit_edit_requested(self):
+        self.edit_requested.emit(
+            self.task_id
+        )
+
+    def emit_delete_requested(self):
+        self.delete_requested.emit(
+            self.task_id
+        )
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.selected_requested.emit(
+                self.task_id
+            )
+
+        super().mousePressEvent(event)
 
     def apply_status_style(
             self,

@@ -424,6 +424,32 @@ class PlannerWindow(QMainWindow):
                 background-color: #fecaca
             }
 
+            QToolButton#taskEditButton,
+            QToolButton#taskDeleteButton {
+                background-color: transparent;
+                border: 1px solid transparent;
+                border-radius: 8px;
+                padding: 4px;
+            }
+
+            QToolButton#taskEditButton:hover {
+                background-color: #dbeafe;
+                border: 1px solid #bfdbfe;
+            }
+
+            QToolButton#taskEditButton:pressed {
+                background-color: #bfdbfe;
+            }
+
+            QToolButton#taskDeleteButton:hover {
+                background-color: #fee2e2;
+                border: 1px solid #fecaca;
+            }
+
+            QToolButton#taskDeleteButton:pressed {
+                background-color: #fecaca;
+            }
+
             """
         )
 
@@ -495,6 +521,10 @@ class PlannerWindow(QMainWindow):
             )
 
             card = TaskCard(task)
+
+            card.selected_requested.connect(
+                self.select_task_by_id
+            )
 
             estimated_height = max(
                 card.sizeHint().height(),
