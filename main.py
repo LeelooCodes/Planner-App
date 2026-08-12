@@ -30,6 +30,7 @@ from widgets.step_card import StepCard
 from dialogs.add_task_dialog import AddTaskDialog
 from dialogs.dependency_dialog import DependencyDialog
 from dialogs.edit_step_dialog import EditStepDialog
+from dialogs.edit_task_dialog import EditTaskDialog
 
 
 class PlannerWindow(QMainWindow):
@@ -526,6 +527,14 @@ class PlannerWindow(QMainWindow):
                 self.select_task_by_id
             )
 
+            card.edit_requested.connect(
+                self.on_task_edit_requested
+            )
+
+            card.delete_requested.connect(
+                self.on_task_delete_requested
+            )
+
             estimated_height = max(
                 card.sizeHint().height(),
                 85
@@ -554,6 +563,111 @@ class PlannerWindow(QMainWindow):
             )
         elif self.task_list.count() > 0:
             self.task_list.setCurrentRow(0)
+
+    def on_task_edit_requested(
+            self,
+            task_id
+    ):
+        task = self.database.get_task(
+            task_id
+        )
+
+        if task is None:
+            QMessageBox.warning(
+                self,
+                "Unable to edit task",
+                "The selected task no longer exists."
+            )
+            return
+
+        dialog = EditTaskDialog(
+            task,
+            self
+        )
+
+        if (
+            dialog.exec()
+            != QDialog.DialogCode.Accepted
+        ):
+            return
+
+        task_data = dialog.get_task_data()
+
+        try:
+            self.database.update_task(
+                task_id=task_id,
+                title=task_data["title"],
+                deadline=task_data["deadline"],
+                dependency=task_data["dependency"]
+            )
+
+        except ValueError as error:
+            QMessageBox.warning(
+                self,
+                "Unable to edit task",
+                str(error)
+            )
+            return
+
+        self.load_tasks()
+        self.select_task_by_id(
+            task_id
+        )
+
+    def on_task_delete_requested(
+            self,
+            task_id
+    ):
+        task = self.database.get_task(
+            task_id
+        )
+
+        if task is None:
+            QMessageBox.warning(
+                self,
+                "Unable to delete task",
+                "The selected task no longer exists."
+            )
+            return
+
+        confirmation = QMessageBox.question(
+            self,
+            "Delete task?",
+            (
+                "Are you sure you want to delete "
+                "the task: "
+                f"{task['title']}?\n\n"
+                "All steps belonging to this task "
+                "will also be deleted. \n\n"
+                "This action cannot be undone."
+            ),
+            (
+                QMessageBox.StandardButton.Yes
+                | QMessageBox.StandardButton.No
+            ),
+            QMessageBox.StandardButton.No
+        )
+
+        if (
+            confirmation
+            != QMessageBox.StandardButton.Yes
+        ):
+            return
+
+        try:
+            self.database.delete_task(
+                task_id
+            )
+
+        except ValueError as error:
+            QMessageBox.warning(
+                self,
+                "Unable to delete task",
+                str(error)
+            )
+            return
+
+        self.load_tasks()
 
     def on_task_selected(self, current, previous):
         if current is None:

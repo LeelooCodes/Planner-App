@@ -511,6 +511,122 @@ class PlannerDatabase:
 
         return cursor.lastrowid
 
+    def update_task(
+            self,
+            task_id,
+            title,
+            deadline="",
+            dependency=""
+    ):
+        title = title.strip()
+        deadline = deadline.strip()
+        dependency = dependency.strip()
+
+        if title == "":
+            raise ValueError(
+                "Task title cannot be empty."
+            )
+
+        if not self.validate_deadline(
+            deadline
+        ):
+            raise ValueError(
+                "Invalid deadline format. "
+                "Use YYYY-MM-DD."
+            )
+
+        existing_task = self.get_task(
+            task_id
+        )
+
+        if existing_task is None:
+            raise ValueError(
+                "The selected task does not exist."
+            )
+
+        dependency_changed = (
+            existing_task["dependency"]
+            != dependency
+        )
+
+        if dependency == "":
+            saved_dependency = None
+            dependency_resolved = 0
+
+        else:
+            saved_dependency = dependency
+
+            if dependency_changed:
+                dependency_resolved = 0
+
+            else:
+                dependency_resolved = int(
+                    existing_task["dependency_resolved"]
+                )
+
+        self.conn.execute(
+            """
+            UPDATE tasks
+            SET
+                title = ?,
+                deadline = ?,
+                dependency = ?,
+                dependency_resolved = ?
+            WHERE id = ?
+            """,
+            (
+                title,
+                deadline if deadline else None,
+                saved_dependency,
+                dependency_resolved,
+                task_id
+            )
+        )
+
+        self.conn.commit()
+
+        self.recalculate_task_status(
+            task_id
+        )
+
+        return task_id
+
+    def delete_task(
+            self,
+            task_id
+    ):
+        task = self.get_task(
+            task_id
+        )
+
+        if task is None:
+            raise ValueError(
+                "The selected task does not exist."
+            )
+
+        try:
+            self.conn.execute(
+                """
+                DELETE FROM steps
+                WHERE task_id = ?
+                """,
+                (task_id, )
+            )
+
+            self.conn.execute(
+                """
+                DELETE FROM tasks
+                WHERE id = ?
+                """,
+                (task_id, )
+            )
+
+            self.conn.commit()
+
+        except sqlite3.Error:
+            self.conn.rollback()
+            raise
+
     def add_step(
         self,
         task_id,
