@@ -23,6 +23,7 @@ class PlannerDatabase:
                 dependency TEXT,
                 status TEXT NOT NULL DEFAULT 'TBD',
                 dependency_resolved INTEGER NOT NULL DEFAULT 0,
+                position INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL
             )
             """
@@ -127,6 +128,47 @@ class PlannerDatabase:
                 INTEGER NOT NULL DEFAULT 0
                 """
             )
+
+        if "position" not in task_columns:
+            self.conn.execute(
+                """
+                ALTER TABLE tasks
+                ADD COLUMN position
+                INTEGER NOT NULL DEFAULT 0
+                """
+            )
+
+            existing_tasks = self.conn.execute(
+                """
+                SELECT id
+                FROM tasks
+                ORDER BY
+                    CASE
+                        WHEN deadline IS NULL
+                            OR deadline = ''
+                        THEN 1
+                        ELSE 0
+                    END,
+                    deadline,
+                    id DESC
+                """
+            ).fetchall()
+
+            for position, task in enumerate(
+                existing_tasks,
+                start=1
+            ):
+                self.conn.execute(
+                    """
+                    UPDATE tasks
+                    SET position = ?
+                    WHERE id = ?
+                    """,
+                    (
+                        position,
+                        task["id"]
+                    )
+                )
 
         step_columns = {
             row["name"]
@@ -281,6 +323,7 @@ class PlannerDatabase:
                 tasks.dependency,
                 tasks.status,
                 tasks.dependency_resolved,
+                tasks.position,
                 tasks.created_at,
 
                 COUNT(steps.id) AS total_steps,
@@ -307,17 +350,12 @@ class PlannerDatabase:
                 tasks.dependency,
                 tasks.status,
                 tasks.dependency_resolved,
+                tasks.position,
                 tasks.created_at
             
             ORDER BY
-                CASE
-                    WHEN tasks.deadline IS NULL
-                        OR tasks.deadline = ''
-                    THEN 1
-                    ELSE 0
-                END,
-                tasks.deadline,
-                tasks.id DESC
+                tasks.position,
+                tasks.id
             """
         ).fetchall()
 
@@ -348,6 +386,7 @@ class PlannerDatabase:
                     "dependency_resolved": bool(
                         task["dependency_resolved"]
                     ),
+                    "position": task["position"],
                     "created_at": task["created_at"],
                     "total_steps": total_steps,
                     "completed_steps": completed_steps
@@ -366,6 +405,7 @@ class PlannerDatabase:
                 dependency,
                 status,
                 dependency_resolved,
+                position,
                 created_at
             FROM tasks
             WHERE id = ?
@@ -385,6 +425,7 @@ class PlannerDatabase:
             "dependency_resolved": bool(
                 task["dependency_resolved"]
             ),
+            "position": task["position"],
             "created_at": task["created_at"]
         }
 
@@ -485,6 +526,15 @@ class PlannerDatabase:
                 "Invalid deadline format. Use YYYY-MM-DD."
             )
 
+        result = self.conn.execute(
+            """
+            SELECT COALESCE(MAX(position), 0) + 1
+            FROM tasks
+            """
+        ).fetchone()
+
+        next_position = result[0]
+
         cursor = self.conn.execute(
             """
             INSERT INTO tasks (
@@ -493,9 +543,10 @@ class PlannerDatabase:
                 dependency,
                 dependency_resolved,
                 status,
+                position,
                 created_at
             ) 
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 title,
@@ -503,6 +554,7 @@ class PlannerDatabase:
                 dependency if dependency else None,
                 0,
                 "TBD",
+                next_position,
                 datetime.now().isoformat(timespec="seconds")
             )
         )
@@ -620,6 +672,60 @@ class PlannerDatabase:
                 """,
                 (task_id, )
             )
+
+            self.conn.commit()
+
+        except sqlite3.Error:
+            self.conn.rollback()
+            raise
+
+    def reorder_tasks(
+            self,
+            ordered_task_ids
+    ):
+        existing_tasks = self.conn.execute(
+            """
+            SELECT id
+            FROM tasks
+            """
+        ).fetchall()
+
+        existing_task_ids = {
+            row["id"]
+            for row in existing_tasks
+        }
+
+        ordered_task_ids = list(
+            ordered_task_ids
+        )
+
+        if (
+            len(ordered_task_ids)
+            != len(existing_task_ids)
+            or set(ordered_task_ids)
+            != existing_task_ids
+        ):
+            raise ValueError(
+                "The task order does not match "
+                "the current tasks."
+            )
+
+        try:
+            for position, task_id in enumerate(
+                ordered_task_ids,
+                start=1
+            ):
+                self.conn.execute(
+                    """
+                    UPDATE tasks
+                    SET position = ?
+                    WHERE id = ?
+                    """,
+                    (
+                        position,
+                        task_id
+                    )
+                )
 
             self.conn.commit()
 

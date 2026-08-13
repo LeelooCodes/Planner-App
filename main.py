@@ -41,7 +41,9 @@ class PlannerWindow(QMainWindow):
         self.database = PlannerDatabase()
 
         self.pending_step_dependency = ""
+
         self.is_loading_steps = False
+        self.is_loading_tasks = False
 
         self.setWindowTitle("Task Planner")
 
@@ -109,6 +111,19 @@ class PlannerWindow(QMainWindow):
 
         self.task_list.setWordWrap(True)
         self.task_list.setUniformItemSizes(False)
+
+        self.task_list.setDragEnabled(True)
+        self.task_list.setAcceptDrops(True)
+        self.task_list.setDropIndicatorShown(True)
+        self.task_list.setDragDropMode(
+            QAbstractItemView.DragDropMode.InternalMove
+        )
+        self.task_list.setDefaultDropAction(
+            Qt.DropAction.MoveAction
+        )
+        self.task_list.model().rowsMoved.connect(
+            self.on_tasks_reordered
+        )
 
 
         task_layout.addWidget(
@@ -408,6 +423,10 @@ class PlannerWindow(QMainWindow):
                 border: 10px solid #2563eb;
             }
 
+            QListWidget#taskList::drop-indicator {
+                border: 10px solid #2563eb;
+            }
+
             QListWidget#stepList::item {
                 background-color: transparent;
                 color: #1e293b;
@@ -554,6 +573,8 @@ class PlannerWindow(QMainWindow):
                 return
 
     def load_tasks(self):
+        self.is_loading_tasks = True
+
         selected_task_id = None
 
         current_item = self.task_list.currentItem()
@@ -623,6 +644,50 @@ class PlannerWindow(QMainWindow):
             )
         elif self.task_list.count() > 0:
             self.task_list.setCurrentRow(0)
+
+        self.is_loading_tasks = False
+
+    def on_tasks_reordered(
+            self,
+            parent,
+            start,
+            end,
+            destination,
+            row
+    ):
+        if self.is_loading_tasks:
+            return
+
+        ordered_task_ids = []
+
+        for index in range(
+            self.task_list.count()
+        ):
+            item = self.task_list.item(
+                index
+            )
+
+            task_id = item.data(
+                Qt.ItemDataRole.UserRole
+            )
+
+            ordered_task_ids.append(
+                task_id
+            )
+
+        try:
+            self.database.reorder_tasks(
+                ordered_task_ids
+            )
+
+        except ValueError as error:
+            QMessageBox.warning(
+                self,
+                "Unable to reorder tasks",
+                str(error)
+            )
+
+            self.load_tasks()
 
     def on_task_dependency_resolved_changed(
             self,
