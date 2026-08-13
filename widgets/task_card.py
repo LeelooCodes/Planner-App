@@ -2,6 +2,7 @@ from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QIcon
 
 from PySide6.QtWidgets import (
+    QCheckBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -12,6 +13,7 @@ from PySide6.QtWidgets import (
 
 class TaskCard(QFrame):
     selected_requested = Signal(int)
+    dependency_resolved_changed = Signal(int, bool)
     edit_requested = Signal(int)
     delete_requested = Signal(int)
 
@@ -169,11 +171,6 @@ class TaskCard(QFrame):
                 f"Deadline: {task['deadline']}"
             )
 
-        if task["dependency"]:
-            details.append(
-                f"Dependent on: {task['dependency']}"
-            )
-
         if details:
             details_label = QLabel(
                 "\n".join(details)
@@ -187,12 +184,87 @@ class TaskCard(QFrame):
 
             card_layout.addWidget(details_label)
 
+        if task["dependency"]:
+            dependency_row = QHBoxLayout()
+
+            dependency_row.setContentsMargins(
+                0,
+                0,
+                0,
+                0
+            )
+
+            dependency_row.setSpacing(7)
+
+            self.dependency_resolved_checkbox = QCheckBox()
+
+            self.dependency_resolved_checkbox.setObjectName(
+                "taskDependencyResolvedCheckbox"
+            )
+
+            self.dependency_resolved_checkbox.setChecked(
+                task["dependency_resolved"]
+            )
+
+            self.dependency_resolved_checkbox.setToolTip(
+                "Mark this dependency as resolved"
+            )
+
+            self.dependency_resolved_checkbox.setFixedSize(
+                20,
+                20
+            )
+
+            dependency_text_label = QLabel(
+                f"Waiting for: {task['dependency']}"
+            )
+
+            dependency_text_label.setObjectName(
+                "taskDependencyText"
+            )
+
+            dependency_text_label.setWordWrap(True)
+
+            dependency_text_label.setSizePolicy(
+                QSizePolicy.Policy.Expanding,
+                QSizePolicy.Policy.Minimum
+            )
+
+            dependency_row.addWidget(
+                self.dependency_resolved_checkbox,
+                alignment=Qt.AlignmentFlag.AlignVCenter
+            )
+
+            dependency_row.addWidget(
+                dependency_text_label,
+                stretch=1,
+                alignment=Qt.AlignmentFlag.AlignVCenter
+            )
+
+            card_layout.addLayout(
+                dependency_row
+            )
+
+        if task["dependency"]:
+            self.dependency_resolved_checkbox.toggled.connect(
+                self.emit_dependency_resolved_changed
+            )
+
         self.edit_button.clicked.connect(
             self.emit_edit_requested
         )
 
         self.delete_button.clicked.connect(
             self.emit_delete_requested
+        )
+
+    def emit_dependency_resolved_changed(
+            self,
+            checked
+    ):
+        self.dependency_resolved_changed.emit(
+            self.task_id,
+            checked
         )
 
     def emit_edit_requested(self):

@@ -829,6 +829,46 @@ class PlannerDatabase:
 
         return task_id
 
+    def set_task_dependency_resolved(
+            self,
+            task_id,
+            is_resolved
+    ):
+        task = self.get_task(
+            task_id
+        )
+
+        if task is None:
+            raise ValueError(
+                "The selected task does not exist."
+            )
+
+        if not task["dependency"]:
+            raise ValueError(
+                "This task does not have a dependency."
+            )
+
+        self.conn.execute(
+            """
+            UPDATE tasks
+            SET dependency_resolved = ?
+            WHERE id = ?
+            """,
+            (
+                int(bool(is_resolved)),
+                task_id
+            )
+        )
+
+        self.conn.commit()
+
+        self.recalculate_task_status(
+            task_id
+        )
+
+        return task_id
+        
+
     def set_step_dependency_resolved(
             self,
             step_id,

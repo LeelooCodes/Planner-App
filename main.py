@@ -323,6 +323,33 @@ class PlannerWindow(QMainWindow):
                 font-size: 13px;
             }
 
+            QCheckBox#taskDependencyResolvedCheckbox {
+                spacing: 0px;
+            }
+
+            QCheckBox#taskDependencyResolvedCheckbox::indicator {
+                width: 16px;
+                height: 16px;
+                border: 2px solid #c2410c;
+                border-radius: 4px;
+                background-color: #ffffff;
+            }
+
+            QCheckBox#taskDependencyResolvedCheckbox::indicator:hover {
+                border: 2px solid #ea580c;
+            }
+
+            QCheckBox#taskDependencyResolvedCheckbox::indicator:checked {
+                background-color: #16a34a;
+                border: 2px solid #16a34a;
+                image: url(assets/icons/check.svg);
+            }
+
+            QLabel#taskDependencyText {
+                color: #9a3412;
+                font-size: 13px;
+            }
+
             QLabel#stepDescription {
                 color: #0f172a;
                 font-size: 15px;
@@ -527,6 +554,10 @@ class PlannerWindow(QMainWindow):
                 self.select_task_by_id
             )
 
+            card.dependency_resolved_changed.connect(
+                self.on_task_dependency_resolved_changed
+            )
+
             card.edit_requested.connect(
                 self.on_task_edit_requested
             )
@@ -563,6 +594,30 @@ class PlannerWindow(QMainWindow):
             )
         elif self.task_list.count() > 0:
             self.task_list.setCurrentRow(0)
+
+    def on_task_dependency_resolved_changed(
+            self,
+            task_id,
+            is_resolved
+    ):
+        try:
+            self.database.set_task_dependency_resolved(
+                task_id,
+                is_resolved
+            )
+
+        except ValueError as error:
+            QMessageBox.warning(
+                self,
+                "Unable to update dependency",
+                str(error)
+            )
+            return
+
+        self.load_tasks()
+        self.select_task_by_id(
+            task_id
+        )
 
     def on_task_edit_requested(
             self,
