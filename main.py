@@ -176,6 +176,10 @@ class PlannerWindow(QMainWindow):
             "Add dependency"
         )
 
+        self.add_step_dependency_checkbox.setObjectName(
+            "addStepDependencyCheckbox"
+        )
+
         self.new_step_input.setEnabled(False)
         self.add_step_button.setEnabled(False)
         self.add_step_dependency_checkbox.setEnabled(False)
@@ -336,25 +340,53 @@ class PlannerWindow(QMainWindow):
                 image: url(assets/icons/check.svg);
             }
 
-            QCheckBox#stepDependencyResolvedCheckbox {
-                spacing: 0px;
+            QCheckBox#addStepDependencyCheckbox{
+                color: #334155;
+                font-size: 14px;
+                spacing: 7px;
             }
 
-            QCheckBox#stepDependencyResolvedCheckbox::indicator {
-                width: 16px;
-                height: 16px;
-                border: 2px solid #c2410c;
+            QCheckBox#addStepDependencyCheckbox::indicator {
+                width: 18px;
+                height: 18px;
+                border: 2px solid #64748b;
                 border-radius: 4px;
                 background-color: #ffffff;
             }
 
-            QCheckBox#stepDependencyResolvedCheckbox::indicator:hover {
-                border: 2px solid #ea580c;
+            QCheckBox#addStepDependencyCheckbox::indicator:hover {
+                border: 2px solid #2563eb;
             }
 
-            QCheckBox#stepDependencyResolvedCheckbox::indicator:checked {
-                background-color: #16a34a;
-                border: 2px solid #16a34a;
+            QCheckBox#addStepDependencyCheckbox::indicator:checked {
+                background-color: #2563eb;
+                border: 2px solid #2563eb;
+                image: url(assets/icons/check.svg);
+            }
+
+            QCheckBox#stepDependencyResolvedCheckbox,
+            QCheckBox#taskDependencyResolvedCheckbox {
+                spacing: 0px;
+            }
+
+            QCheckBox#stepDependencyResolvedCheckbox::indicator,
+            QCheckBox#taskDependencyResolvedCheckbox::indicator {
+                width: 16px;
+                height: 16px;
+                border: 2px solid #64748b;
+                border-radius: 4px;
+                background-color: #ffffff;
+            }
+
+            QCheckBox#stepDependencyResolvedCheckbox::indicator:hover,
+            QCheckBox#taskDependencyResolvedCheckbox::indicator:hover {
+                border: 2px solid #2563eb;
+            }
+
+            QCheckBox#stepDependencyResolvedCheckbox::indicator:checked,
+            QCheckBox#taskDependencyResolvedCheckbox::indicator:checked {
+                background-color: #2563eb;
+                border: 2px solid #2563eb;
                 image: url(assets/icons/check.svg);
             }
 
@@ -363,28 +395,7 @@ class PlannerWindow(QMainWindow):
                 font-size: 13px;
             }
 
-            QCheckBox#taskDependencyResolvedCheckbox {
-                spacing: 0px;
-            }
-
-            QCheckBox#taskDependencyResolvedCheckbox::indicator {
-                width: 16px;
-                height: 16px;
-                border: 2px solid #c2410c;
-                border-radius: 4px;
-                background-color: #ffffff;
-            }
-
-            QCheckBox#taskDependencyResolvedCheckbox::indicator:hover {
-                border: 2px solid #ea580c;
-            }
-
-            QCheckBox#taskDependencyResolvedCheckbox::indicator:checked {
-                background-color: #16a34a;
-                border: 2px solid #16a34a;
-                image: url(assets/icons/check.svg);
-            }
-
+            
             QLabel#taskDependencyText {
                 color: #9a3412;
                 font-size: 13px;
