@@ -3,6 +3,7 @@ import sys
 from PySide6.QtCore import QDate, Qt, QSize
 
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QApplication,
     QCheckBox,
     QDialog,
@@ -40,6 +41,7 @@ class PlannerWindow(QMainWindow):
         self.database = PlannerDatabase()
 
         self.pending_step_dependency = ""
+        self.is_loading_steps = False
 
         self.setWindowTitle("Task Planner")
 
@@ -201,8 +203,31 @@ class PlannerWindow(QMainWindow):
         self.step_list.setObjectName("stepList")
 
         
-
         self.step_list.setWordWrap(True)
+
+        self.step_list.setDragEnabled(
+            True
+        )
+
+        self.step_list.setAcceptDrops(
+            True
+        )
+
+        self.step_list.setDropIndicatorShown(
+            True
+        )
+
+        self.step_list.setDragDropMode(
+            QAbstractItemView.DragDropMode.InternalMove
+        )
+
+        self.step_list.setDefaultDropAction(
+            Qt.DropAction.MoveAction
+        )
+
+        self.step_list.model().rowsMoved.connect(
+            self.on_steps_reordered
+        )
 
         step_layout.addWidget(
             self.step_list,
@@ -377,6 +402,10 @@ class PlannerWindow(QMainWindow):
             QListWidget#stepList {
                 background-color: transparent;
                 color: #1e293b;
+            }
+
+            QListWidget#stepList::drop-indicator {
+                border: 10px solid #2563eb;
             }
 
             QListWidget#stepList::item {
@@ -855,6 +884,8 @@ class PlannerWindow(QMainWindow):
         self.new_step_input.setFocus()
 
     def load_steps(self, task_id):
+        self.is_loading_steps = True
+
         self.step_list.clear()
 
         steps = self.database.get_steps(task_id)
@@ -902,6 +933,64 @@ class PlannerWindow(QMainWindow):
             self.step_list.setItemWidget(
                 item,
                 card
+            )
+
+        self.is_loading_steps = False
+
+    def on_steps_reordered(
+            self,
+            parent,
+            start,
+            end,
+            destination,
+            row
+    ):
+        if self.is_loading_steps:
+            return
+
+        current_task_item = (
+            self.task_list.currentItem()
+        )
+
+        if current_task_item is None:
+            return
+
+        task_id = current_task_item.data(
+            Qt.ItemDataRole.UserRole
+        )
+
+        ordered_step_ids = []
+
+        for index in range(
+            self.step_list.count()
+        ):
+            item = self.step_list.item(
+                index
+            )
+
+            step_id = item.data(
+                Qt.ItemDataRole.UserRole
+            )
+
+            ordered_step_ids.append(
+                step_id
+            )
+
+        try:
+            self.database.reorder_steps(
+                task_id,
+                ordered_step_ids
+            )
+
+        except ValueError as error:
+            QMessageBox.warning(
+                self,
+                "Unable to reorder steps",
+                str(error)
+            )
+
+            self.load_steps(
+                task_id
             )
 
     def on_step_edit_requested(self, step_id):

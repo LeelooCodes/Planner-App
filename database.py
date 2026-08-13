@@ -794,6 +794,74 @@ class PlannerDatabase:
 
         return task_id
 
+    def reorder_steps(
+        self,
+        task_id,
+        ordered_steps_ids
+    ):
+        task = self.get_task(
+            task_id
+        )
+
+        if task is None:
+            raise ValueError(
+                "The selected task does not exist."
+            )
+
+        existing_steps = self.conn.execute(
+            """
+            SELECT id
+            FROM steps
+            WHERE task_id = ?
+            """,
+            (task_id, )
+        ).fetchall()
+
+        existing_step_ids = {
+            row["id"]
+            for row in existing_steps
+        }
+
+        ordered_step_ids = list(
+            ordered_steps_ids
+        )
+
+        if (
+            len(ordered_step_ids)
+            != len(existing_step_ids)
+            or set(ordered_step_ids)
+            != existing_step_ids
+        ):
+            raise ValueError(
+                "The step order does not match "
+                "the selected task."
+            )
+
+        try:
+            for position, step_id in enumerate(
+                ordered_step_ids,
+                start=1
+            ):
+                self.conn.execute(
+                    """
+                    UPDATE steps
+                    SET position = ?
+                    WHERE id = ?
+                        AND task_id = ?
+                    """,
+                    (
+                        position,
+                        step_id,
+                        task_id
+                    )
+                )
+
+            self.conn.commit()
+
+        except sqlite3.Error:
+            self.conn.rollback()
+            raise
+
     def set_step_done(self, step_id, is_done):
         step = self.conn.execute(
             """
