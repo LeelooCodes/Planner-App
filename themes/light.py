@@ -56,6 +56,51 @@ LIGHT_THEME = """
         border: 1px solid #cbd5e1;
     }
 
+    QComboBox {
+        background-color: #ffffff;
+        color: #0f172a;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 8px 10px;
+        min-height: 18px;
+    }
+
+    QComboBox:hover {
+        border: 1px solid #94a3b8;
+    }
+
+    QComboBox:focus {
+        border: 1px solid #2563eb;
+    }
+
+    QComboBox::drop-down {
+        border: none;
+        width: 28px;
+    }
+
+    QComboBox QAbstractItemView {
+        background-color: #ffffff;
+        color: #0f172a;
+        border: 1px solid #cbd5e1;
+        outline: none;
+    }
+
+    QComboBox QAbstractItemView::item {
+        background-color: #ffffff;
+        color: #0f172a;
+        padding: 6px 10px;
+    }
+
+    QComboBox QAbstractItemView::item:hover {
+        background-color: #eff6ff;
+        color: #0f172a;
+    }
+
+    QComboBox QAbstractItemView::item:selected {
+        background-color: #dbeafe;
+        color: #0f172a;
+    }
+
     QLabel#appTitle {
         color: #1e293b;
         font-size: 28px;
