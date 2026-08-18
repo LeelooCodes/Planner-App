@@ -32,7 +32,7 @@ from dialogs.add_task_dialog import AddTaskDialog
 from dialogs.dependency_dialog import DependencyDialog
 from dialogs.edit_step_dialog import EditStepDialog
 from dialogs.edit_task_dialog import EditTaskDialog
-from themes.light import LIGHT_THEME
+from themes.theme_manager import ThemeManager
 from menus.app_menu_bar import AppMenuBar
 from dialogs.settings_dialog import SettingsDialog
 
@@ -965,8 +965,12 @@ if __name__ == "__main__":
         QStyleFactory.create("Fusion")
     )
 
-    app.setStyleSheet(
-        LIGHT_THEME
+    theme_manager = ThemeManager(
+        app
+    )
+
+    theme_manager.apply_theme(
+        ThemeManager.DEFAULT_THEME
     )
 
     window = PlannerWindow()
