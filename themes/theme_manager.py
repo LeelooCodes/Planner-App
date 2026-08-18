@@ -3,8 +3,9 @@ from themes.light import LIGHT_THEME
 class ThemeManager:
     DEFAULT_THEME = "Light"
 
-    def __init__(self, app):
+    def __init__(self, app, settings):
         self.app = app
+        self.settings = settings
 
         self.themes = {
             "Light": LIGHT_THEME,
@@ -32,6 +33,23 @@ class ThemeManager:
         )
 
         self.current_theme = theme_name
+
+    def apply_saved_theme(self):
+        saved_theme = self.settings.get_theme(
+            self.DEFAULT_THEME
+        )
+
+        if saved_theme not in self.themes:
+            saved_theme = self.DEFAULT_THEME
+
+            self.settings.set_theme(
+                saved_theme
+            )
+
+        self.apply_theme(
+            saved_theme,
+            persist=False
+        )
 
     def get_current_theme(self):
         return self.current_theme
