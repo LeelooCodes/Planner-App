@@ -37,8 +37,10 @@ from menus.app_menu_bar import AppMenuBar
 
 from themes.theme_manager import ThemeManager
 
-from widgets.task_card import TaskCard
+from widgets.reorderable_list_widget import ReorderableListWidget
 from widgets.step_card import StepCard
+from widgets.task_card import TaskCard
+
 
 
 
@@ -129,7 +131,7 @@ class PlannerWindow(QMainWindow):
 
         task_layout.addWidget(self.add_task_button)
 
-        self.task_list = QListWidget()
+        self.task_list = ReorderableListWidget()
         self.task_list.setObjectName("taskList")
 
         self.task_list.setWordWrap(True)
@@ -137,7 +139,6 @@ class PlannerWindow(QMainWindow):
 
         self.task_list.setDragEnabled(True)
         self.task_list.setAcceptDrops(True)
-        self.task_list.setDropIndicatorShown(True)
         self.task_list.setDragDropMode(
             QAbstractItemView.DragDropMode.InternalMove
         )
@@ -241,7 +242,7 @@ class PlannerWindow(QMainWindow):
         )
 
 
-        self.step_list = QListWidget()
+        self.step_list = ReorderableListWidget()
         self.step_list.setObjectName("stepList")
 
         
@@ -252,10 +253,6 @@ class PlannerWindow(QMainWindow):
         )
 
         self.step_list.setAcceptDrops(
-            True
-        )
-
-        self.step_list.setDropIndicatorShown(
             True
         )
 

@@ -154,6 +154,65 @@ DARK_THEME = """
        #334155 - Disabled field border
        ========================================================= */
 
+
+    /* =========================================================
+       CALENDAR POPUP
+
+       #111827 - Calendar background
+       #0f172a - Calendar navigation/header background
+       #f8fafc - Primary calendar text
+       #e2e8f0 - Secondary navigation text
+       #334155 - Calendar borders
+       #1e293b - Navigation hover background
+       #3b82f6 - Selected date background
+       #ffffff - Selected date text
+       #64748b - Disabled / out-of-range date text
+       ========================================================= */
+
+    QCalendarWidget {
+        background-color: #111827;
+        color: #f8fafc;
+    }
+
+    QCalendarWidget QWidget#qt_calendar_navigationbar {
+        background-color: #0f172a;
+        border-bottom: 1px solid #334155;
+    }
+
+    QCalendarWidget QToolButton {
+        background-color: transparent;
+        color: #e2e8f0;
+        border: none;
+        border-radius: 6px;
+        padding: 6px;
+    }
+
+    QCalendarWidget QToolButton:hover {
+        background-color: #1e293b;
+        color: #f8fafc;
+    }
+
+    QCalendarWidget QSpinBox {
+        background-color: #0f172a;
+        color: #f8fafc;
+        border: 1px solid #475569;
+        border-radius: 6px;
+        padding: 4px;
+    }
+
+    QCalendarWidget QAbstractItemView:enabled {
+        background-color: #111827;
+        color: #f8fafc;
+        selection-background-color: #3b82f6;
+        selection-color: #ffffff;
+        outline: none;
+    }
+
+    QCalendarWidget QAbstractItemView:disabled {
+        color: #64748b;
+    }
+
+
     QLineEdit,
     QDateEdit {
         background-color: #0f172a;
@@ -291,7 +350,6 @@ DARK_THEME = """
     QListWidget#stepList::item {
         background-color: transparent;
         padding: 0px;
-        margin-bottom: 8px;
     }
 
     QListWidget#stepList::item {
@@ -313,23 +371,26 @@ DARK_THEME = """
 
 
     /* =========================================================
-       DRAG AND DROP INDICATORS
+       CUSTOM DRAG AND DROP INDICATORS
 
-       #3b82f6 - Visible insertion indicator while reordering
-                  tasks or steps
+       #3b82f6 - Insertion line shown between cards while
+                 reordering tasks or steps
        ========================================================= */
 
-    QListWidget#taskList::drop-indicator,
-    QListWidget#stepList::drop-indicator {
-        border: 10px solid #3b82f6;
+    QFrame#customDropIndicator {
+        background-color: #3b82f6;
+        border: none;
+        border-radius: 1px;
     }
 
 
     /* =========================================================
        TASK AND STEP CARDS
 
-       #1e293b - Card background
-       #334155 - Card border
+       #1e293b - Normal card background
+       #334155 - Normal card border
+       #172554 - Hovered card background
+       #3b82f6 - Hovered card border
        ========================================================= */
 
     QFrame#taskCard,
@@ -337,6 +398,12 @@ DARK_THEME = """
         background-color: #1e293b;
         border: 1px solid #334155;
         border-radius: 10px;
+    }
+
+    QFrame#taskCard:hover,
+    QFrame#stepCard:hover {
+        background-color: #172554;
+        border: 1px solid #3b82f6;
     }
 
 
