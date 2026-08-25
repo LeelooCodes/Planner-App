@@ -12,7 +12,9 @@ from PySide6.QtWidgets import (
 )
 
 class StepCard(QFrame):
+    selected_requested = Signal(int)
     done_changed = Signal(int, bool)
+
     dependency_resolved_changed = Signal(int, bool)
     edit_requested = Signal(int)
     delete_requested = Signal(int)
@@ -284,6 +286,24 @@ class StepCard(QFrame):
         self.delete_button.clicked.connect(
             self.emit_delete_requested
         )
+
+    def set_selected(self, selected):
+        self.setProperty(
+            "selected",
+            selected
+        )
+
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.selected_requested.emit(
+                self.step_id
+            )
+
+        super().mousePressEvent(event)
 
     def emit_done_changed(self, checked):
         self.done_changed.emit(

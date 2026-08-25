@@ -277,6 +277,16 @@ class TaskCard(QFrame):
             self.task_id
         )
 
+    def set_selected(self, selected):
+        self.setProperty(
+            "selected",
+            selected
+        )
+
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
+
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             self.selected_requested.emit(

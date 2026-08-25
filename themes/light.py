@@ -25,8 +25,9 @@ LIGHT_THEME = """
        #0f172a - Active / selected menu text
        #d7dee8 - Menu bar border
        #cbd5e1 - Dropdown menu border
-       #dbeafe - Hover / selected menu background
-       #bfdbfe - Pressed menu background
+       #dbeafe - Hovered menu item background
+       #bfdbfe - Pressed menu bar item background
+       #dbeafe - Selected dropdown menu item background
        #e2e8f0 - Menu separators
        ========================================================= */
 
@@ -154,21 +155,46 @@ LIGHT_THEME = """
        #2563eb - Focused input border
        #e2e8f0 - Disabled field background
        #64748b - Disabled field text
+       #cbd5e1 - Disabled field border
        ========================================================= */
+
+    QLineEdit,
+    QDateEdit {
+        background-color: #ffffff;
+        color: #0f172a;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 8px 10px;
+    }
+
+    QLineEdit:focus,
+    QDateEdit:focus {
+        border: 1px solid #2563eb;
+    }
+
+    QLineEdit:disabled,
+    QDateEdit:disabled {
+        background-color: #e2e8f0;
+        color: #64748b;
+        border: 1px solid #cbd5e1;
+    }
+
 
     /* =========================================================
        CALENDAR POPUP
 
-        #ffffff - Calendar background
-        #f8fafc - Calendar navigation/header background
-        #0f172a - Primary calendar text
-        #334155 - Secondary navigation text
-        #cbd5e1 - Calendar borders
-        #dbeafe - Navigation hover background
-        #2563eb - Selected date background
-        #ffffff - Selected date text
-        #94a3b8 - Disabled / out-of-range date text
-        ========================================================= */
+       #ffffff - Calendar background
+       #f8fafc - Calendar navigation / header background
+       #0f172a - Primary calendar text
+       #334155 - Secondary navigation text
+       #cbd5e1 - Calendar borders
+       #ffffff - Month / year control background
+       #cbd5e1 - Month / year control border
+       #dbeafe - Navigation hover background
+       #2563eb - Selected date background
+       #ffffff - Selected date text
+       #94a3b8 - Disabled / out-of-range date text
+       ========================================================= */
 
     QCalendarWidget {
         background-color: #ffffff;
@@ -211,35 +237,14 @@ LIGHT_THEME = """
 
     QCalendarWidget QAbstractItemView:disabled {
         color: #94a3b8;
-    } 
-
-
-    QLineEdit,
-    QDateEdit {
-        background-color: #ffffff;
-        color: #0f172a;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        padding: 8px 10px;
-    }
-
-    QLineEdit:focus,
-    QDateEdit:focus {
-        border: 1px solid #2563eb;
-    }
-
-    QLineEdit:disabled,
-    QDateEdit:disabled {
-        background-color: #e2e8f0;
-        color: #64748b;
-        border: 1px solid #cbd5e1;
     }
 
 
     /* =========================================================
        COMBO BOXES / DROPDOWN SELECTORS
 
-       #ffffff - Dropdown background
+       #ffffff - Closed dropdown background
+       #ffffff - Open dropdown list background
        #0f172a - Dropdown text
        #cbd5e1 - Standard border
        #94a3b8 - Hover border
@@ -321,8 +326,8 @@ LIGHT_THEME = """
     /* =========================================================
        GENERAL LIST WIDGETS
 
-       Transparent backgrounds allow the panel and card colours
-       underneath the lists to remain visible.
+       List backgrounds remain transparent so the surrounding panel
+       and custom card colours remain visible.
        ========================================================= */
 
     QListWidget {
@@ -339,11 +344,8 @@ LIGHT_THEME = """
     /* =========================================================
        TASK AND STEP LIST ITEMS
 
-       Transparent - Normal list row background
-       #eff6ff - Hovered row background
-       #dbeafe - Selected row background
-       #2563eb - Selected row border
-       #1e293b - Step-list text
+       List items are deliberately transparent because the embedded
+       TaskCard and StepCard widgets own their visual states.
        ========================================================= */
 
     QListWidget#taskList::item,
@@ -356,25 +358,12 @@ LIGHT_THEME = """
         color: #1e293b;
     }
 
-    QListWidget#taskList::item:hover,
-    QListWidget#stepList::item:hover {
-        background-color: #eff6ff;
-        border-radius: 10px;
-    }
-
-    QListWidget#taskList::item:selected,
-    QListWidget#stepList::item:selected {
-        background-color: #dbeafe;
-        border: 1px solid #2563eb;
-        border-radius: 10px;
-    }
-
 
     /* =========================================================
        CUSTOM DRAG AND DROP INDICATORS
 
-       #2563eb - Insertion line shown between cards while 
-                 Reordering tasks or steps
+       #2563eb - Insertion line shown between cards while
+                  reordering tasks or steps
        ========================================================= */
 
     QFrame#customDropIndicator {
@@ -387,10 +376,12 @@ LIGHT_THEME = """
     /* =========================================================
        TASK AND STEP CARDS
 
-       #f8fafc - Normal Card background
-       #d7dee8 - Normal Card border
-       #eff6ff - Hovered Card background
-       #bfdbfe - Hovered card border
+       #f8fafc - Normal card background
+       #d7dee8 - Normal card border
+       #e0eaff - Hovered card background
+       #93c5fd - Hovered card border
+       #dbeafe - Selected card background
+       #2563eb - Selected card border
        ========================================================= */
 
     QFrame#taskCard,
@@ -402,8 +393,16 @@ LIGHT_THEME = """
 
     QFrame#taskCard:hover,
     QFrame#stepCard:hover {
-        background-color: #eff6ff;
-        border: 1px solid #bfdbfe;
+        background-color: #e0eaff;
+        border: 1px solid #93c5fd;
+    }
+
+    QFrame#taskCard[selected="true"],
+    QFrame#stepCard[selected="true"],
+    QFrame#taskCard[selected="true"]:hover,
+    QFrame#stepCard[selected="true"]:hover {
+        background-color: #dbeafe;
+        border: 2px solid #2563eb;
     }
 
 
@@ -444,8 +443,8 @@ LIGHT_THEME = """
 
        #334155 - Inline "Add dependency" label text
 
-       Step completion and dependency-resolution checkboxes have
-       no label spacing because their text is rendered separately.
+       Step completion and dependency-resolution checkboxes have no
+       label spacing because their text is rendered separately.
 
        "Add dependency" includes its own label and therefore uses
        normal spacing.
@@ -510,7 +509,8 @@ LIGHT_THEME = """
     /* =========================================================
        CHECKBOX HOVER STATE
 
-       #2563eb - Hover border for every interactive checkbox
+       #2563eb - Hover border for every interactive
+                  checkbox
        ========================================================= */
 
     QDialog QCheckBox::indicator:hover,
@@ -560,9 +560,11 @@ LIGHT_THEME = """
 
        Transparent - Normal button background
        #dbeafe - Edit hover background
-       #bfdbfe - Edit hover border / pressed background
+       #bfdbfe - Edit hover border
+       #bfdbfe - Edit pressed background
        #fee2e2 - Delete hover background
-       #fecaca - Delete hover border / pressed background
+       #fecaca - Delete hover border
+       #fecaca - Delete pressed background
        ========================================================= */
 
     QToolButton#stepEditButton,

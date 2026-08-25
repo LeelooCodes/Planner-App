@@ -159,6 +159,10 @@ class PlannerWindow(QMainWindow):
             self.on_task_selected
         )
 
+        self.task_list.currentItemChanged.connect(
+            self.update_task_card_selection
+        )
+
         self.main_splitter.addWidget(task_panel)
 
         step_panel = QFrame()
@@ -241,7 +245,6 @@ class PlannerWindow(QMainWindow):
             self.on_add_step_dependency_toggled
         )
 
-
         self.step_list = ReorderableListWidget()
         self.step_list.setObjectName("stepList")
 
@@ -266,6 +269,10 @@ class PlannerWindow(QMainWindow):
 
         self.step_list.model().rowsMoved.connect(
             self.on_steps_reordered
+        )
+
+        self.step_list.currentItemChanged.connect(
+            self.update_step_card_selection
         )
 
         step_layout.addWidget(
@@ -356,6 +363,72 @@ class PlannerWindow(QMainWindow):
                 self.task_list.setCurrentItem(item)
                 self.task_list.scrollToItem(item)
                 return
+
+    def select_step_by_id(self, step_id):
+        for row in range(
+            self.step_list.count()
+        ):
+            item = self.step_list.item(
+                row
+            )
+
+            item_step_id = item.data(
+                Qt.ItemDataRole.UserRole
+            )
+
+            if item_step_id == step_id:
+                self.step_list.setCurrentItem(
+                    item
+                )
+
+                self.step_list.scrollToItem(
+                    item
+                )
+
+                return
+
+    def update_task_card_selection(
+        self,
+        current,
+        previous
+    ):
+        for row in range(
+            self.task_list.count()
+        ):
+            item = self.task_list.item(
+                row
+            )
+
+            card = self.task_list.itemWidget(
+                item
+            )
+
+            if card is not None:
+                card.set_selected(
+                    item is current
+                )
+
+
+    def update_step_card_selection(
+            self,
+            current,
+            previous
+    ):
+        for row in range(
+            self.step_list.count()
+        ):
+            item = self.step_list.item(
+                row
+            )
+
+            card = self.step_list.itemWidget(
+                item
+            )
+
+            if card is not None:
+                card.set_selected(
+                    item is current
+                )
 
     def load_tasks(self):
         self.is_loading_tasks = True
@@ -749,6 +822,10 @@ class PlannerWindow(QMainWindow):
             )
 
             card = StepCard(step)
+
+            card.selected_requested.connect(
+                self.select_step_by_id
+            )
 
             card.done_changed.connect(
                 self.on_step_done_changed
