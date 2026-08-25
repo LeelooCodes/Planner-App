@@ -23,18 +23,23 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from database import PlannerDatabase
+from config.app_settings import AppSettings
 
-from widgets.task_card import TaskCard
-from widgets.step_card import StepCard
+from database import PlannerDatabase
 
 from dialogs.add_task_dialog import AddTaskDialog
 from dialogs.dependency_dialog import DependencyDialog
 from dialogs.edit_step_dialog import EditStepDialog
 from dialogs.edit_task_dialog import EditTaskDialog
-from themes.theme_manager import ThemeManager
-from menus.app_menu_bar import AppMenuBar
 from dialogs.settings_dialog import SettingsDialog
+
+from menus.app_menu_bar import AppMenuBar
+
+from themes.theme_manager import ThemeManager
+
+from widgets.task_card import TaskCard
+from widgets.step_card import StepCard
+
 
 
 class PlannerWindow(QMainWindow):
@@ -965,13 +970,14 @@ if __name__ == "__main__":
         QStyleFactory.create("Fusion")
     )
 
+    app_settings = AppSettings()
+
     theme_manager = ThemeManager(
-        app
+        app,
+        app_settings
     )
 
-    theme_manager.apply_theme(
-        ThemeManager.DEFAULT_THEME
-    )
+    theme_manager.apply_saved_theme()
 
     window = PlannerWindow()
     window.showMaximized()

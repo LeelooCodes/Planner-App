@@ -18,7 +18,7 @@ class ThemeManager:
             self.themes.keys()
         )
 
-    def apply_theme(self, theme_name):
+    def apply_theme(self, theme_name, persist = True):
         if theme_name not in self.themes:
             raise ValueError(
                 f"Unknown theme: {theme_name}"
@@ -33,6 +33,11 @@ class ThemeManager:
         )
 
         self.current_theme = theme_name
+
+        if persist:
+            self.settings.set_theme(
+                theme_name
+            )
 
     def apply_saved_theme(self):
         saved_theme = self.settings.get_theme(

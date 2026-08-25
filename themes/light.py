@@ -50,7 +50,7 @@ LIGHT_THEME = """
     }
 
     QDialog QLineEdit::disabled,
-    QDialog QDateEdit::diabled{
+    QDialog QDateEdit::disabled{
         background-color: #e2e8f0;
         color: #64748b;
         border: 1px solid #cbd5e1;
@@ -316,6 +316,56 @@ LIGHT_THEME = """
 
     QLineEdit:focus {
         border: 1px solid #2563eb;
+    }
+
+    QMenuBar {
+        background-color: #f8fafc;
+        color: #334155;
+        border-bottom: 1px solid #d7dee8;
+        padding: 4px 8px;
+        spacing: 4px;
+    }
+
+    QMenuBar::item {
+        background-color: transparent;
+        color: #334155;
+        padding: 6px 10px;
+        border-radius: 6px;
+    }
+
+    QMenuBar::item:selected {
+        background-color: #dbeafe;
+        color: #0f172a;
+    }
+
+    QMenuBar::item:pressed {
+        background-color: #bfdbfe;
+        color: #0f172a;
+    }
+
+    QMenu {
+        background-color: #ffffff;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        padding: 4px;
+    }
+
+    QMenu::item {
+        background-color: transparent;
+        color: #334155;
+        padding: 7px 28px 7px 10px;
+        border-radius: 5px;
+    }
+
+    QMenu::item:selected {
+        background-color: #dbeafe;
+        color: #0f172a;
+    }
+
+    QMenu::separator {
+        height: 1px;
+        background-color: #e2e8f0;
+        margin: 4px 8px;
     }
 
     QToolButton#stepEditButton,
