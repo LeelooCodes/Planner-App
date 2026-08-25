@@ -43,8 +43,13 @@ from widgets.step_card import StepCard
 
 
 class PlannerWindow(QMainWindow):
-    def __init__(self):
+    def __init__(
+            self,
+            theme_manager
+            ):
         super().__init__()
+
+        self.theme_manager = theme_manager
 
         self.database = PlannerDatabase()
 
@@ -283,15 +288,35 @@ class PlannerWindow(QMainWindow):
         self.load_tasks()
 
     def on_settings_requested(self):
-        dialog = SettingsDialog(self)
+        dialog = SettingsDialog(
+            available_themes=(
+                self.theme_manager
+                .get_available_themes()
+            ),
+            current_theme=(
+                self.theme_manager
+                .get_current_theme()
+            ),
+            parent=self
+        )
 
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        if (
+            dialog.exec() != QDialog.DialogCode.Accepted
+        ):
             return
 
-        selected_theme = dialog.get_selected_theme()
+        selected_theme = (
+            dialog.get_selected_theme()
+        )
 
-        print(
-            f"Selected theme: {selected_theme}"
+        if (
+            selected_theme
+            == self.theme_manager.get_current_theme()
+        ):
+            return
+
+        self.theme_manager.apply_theme(
+            selected_theme
         )
 
     def open_add_task_dialog(self):
@@ -979,7 +1004,9 @@ if __name__ == "__main__":
 
     theme_manager.apply_saved_theme()
 
-    window = PlannerWindow()
+    window = PlannerWindow(
+        theme_manager
+    )
     window.showMaximized()
 
     sys.exit(app.exec())

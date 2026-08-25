@@ -1,4 +1,5 @@
 from themes.light import LIGHT_THEME
+from themes.dark import DARK_THEME
 
 class ThemeManager:
     DEFAULT_THEME = "Light"
@@ -9,6 +10,7 @@ class ThemeManager:
 
         self.themes = {
             "Light": LIGHT_THEME,
+            "Dark": DARK_THEME,
         }
 
         self.current_theme = None

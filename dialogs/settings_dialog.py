@@ -8,7 +8,12 @@ from PySide6.QtWidgets import (
 )
 
 class SettingsDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(
+            self,
+            available_themes,
+            current_theme,
+            parent=None
+    ):
         super().__init__(parent)
 
         self.setWindowTitle("Settings")
@@ -29,8 +34,12 @@ class SettingsDialog(QDialog):
             "themeSelector"
         )
 
-        self.theme_combo.addItem(
-            "Light"
+        self.theme_combo.addItems(
+            available_themes
+        )
+
+        self.theme_combo.setCurrentText(
+            current_theme
         )
 
         form_layout.addRow(
