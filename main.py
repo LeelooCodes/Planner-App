@@ -60,7 +60,7 @@ class PlannerWindow(QMainWindow):
         self.is_loading_steps = False
         self.is_loading_tasks = False
 
-        self.setWindowTitle("Task Planner")
+        self.setWindowTitle("PyPlanner")
 
         self.app_menu_bar = AppMenuBar(self)
 
@@ -1064,6 +1064,9 @@ class PlannerWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
+    app.setApplicationName("PyPlanner")
+    app.setApplicationDisplayName("PyPlanner")
 
     app.setStyle(
         QStyleFactory.create("Fusion")
