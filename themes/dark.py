@@ -337,7 +337,7 @@ DARK_THEME = """
     }
 
     QListWidget#stepList {
-        color: #e2e8f0;
+        color: #f8fafc;
     }
 
 
@@ -355,7 +355,7 @@ DARK_THEME = """
     }
 
     QListWidget#stepList::item {
-        color: #e2e8f0;
+        color: #f8fafc;
     }
 
 
@@ -422,6 +422,42 @@ DARK_THEME = """
     QLabel#taskCardDetails {
         color: #94a3b8;
         font-size: 13px;
+    }
+
+
+    /* =========================================================
+       TASK STATUS BADGES
+
+       #cbd5e1 / #334155 - TBD text / background
+       #bfdbfe / #1e3a8a - WIP text / background
+       #fed7aa / #7c2d12 - Awaiting text / background
+       #bbf7d0 / #14532d - Completed text / background
+       ========================================================= */
+
+    QLabel#statusBadge {
+        border-radius: 8px;
+        padding: 4px 8px;
+        font-weight: 600;
+    }
+
+    QLabel#statusBadge[status="TBD"] {
+        color: #cbd5e1;
+        background-color: #334155;
+    }
+
+    QLabel#statusBadge[status="WIP"] {
+        color: #bfdbfe;
+        background-color: #1e3a8a;
+    }
+
+    QLabel#statusBadge[status="Awaiting"] {
+        color: #fed7aa;
+        background-color: #7c2d12;
+    }
+
+    QLabel#statusBadge[status="Completed"] {
+        color: #bbf7d0;
+        background-color: #14532d;
     }
 
 

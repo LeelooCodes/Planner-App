@@ -1,5 +1,7 @@
 from themes.light import LIGHT_THEME
 from themes.dark import DARK_THEME
+from themes.pink import PINK_THEME
+from themes.purple import PURPLE_THEME
 
 from utils.paths import resource_path
 
@@ -13,6 +15,8 @@ class ThemeManager:
         self.themes = {
             "Light": LIGHT_THEME,
             "Dark": DARK_THEME,
+            "Pink": PINK_THEME,
+            "Purple": PURPLE_THEME,
         }
 
         self.current_theme = None

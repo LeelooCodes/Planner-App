@@ -314,40 +314,17 @@ class TaskCard(QFrame):
             label,
             status
     ):
-        styles = {
-            "TBD": (
-                "#475569",
-                "#e2e8f0"
-            ),
-            "WIP": (
-                "#1d4ed8",
-                "#dbeafe"
-            ),
-            "Awaiting": (
-                "#9a3412",
-                "#ffedd5"
-            ),
-            "Completed": (
-                "#166534",
-                "#dcfce7"
-            )
-        }
-
-        text_colour, background_colour = (
-            styles.get(
-                status,
-                styles["TBD"]
-            )
+        label.setProperty(
+            "status",
+            status
         )
 
-        label.setStyleSheet(
-            f"""
-            QLabel {{
-                color: {text_colour};
-                background-color: {background_colour};
-                border-radius: 8px;
-                padding: 4px 8px;
-                font-weight: 600;
-            }}
-            """
+        label.style().unpolish(
+            label
         )
+
+        label.style().polish(
+            label
+        )
+
+        label.update()

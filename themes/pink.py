@@ -1,83 +1,83 @@
-LIGHT_THEME = """
+PINK_THEME = """
 
     /* =========================================================
        GLOBAL APPLICATION
 
-       #eef2f7 - Main application background
-       #334155 - Default foreground / text colour
+       #fff7fa - Main application background
+       #68415f - Default foreground / text colour
        ========================================================= */
 
     QMainWindow {
-        background-color: #eef2f7;
+        background-color: #fff7fa;
     }
 
     QWidget {
-        color: #334155;
+        color: #68415f;
     }
 
 
     /* =========================================================
        APPLICATION MENUS
 
-       #f8fafc - Menu bar background
-       #ffffff - Dropdown menu background
-       #334155 - Normal menu text
-       #0f172a - Active / selected menu text
-       #d7dee8 - Menu bar border
-       #cbd5e1 - Dropdown menu border
-       #dbeafe - Hovered menu item background
-       #bfdbfe - Pressed menu bar item background
-       #dbeafe - Selected dropdown menu item background
-       #e2e8f0 - Menu separators
+       #fceff3 - Menu bar background
+       #fffafb - Dropdown menu background
+       #68415f - Normal menu text
+       #56354f - Active / selected menu text
+       #f0ccd8 - Menu bar border
+       #e8b5c7 - Dropdown menu border
+       #ffe3ec - Hovered menu item background
+       #ffc9db - Pressed menu bar item background
+       #ffe3ec - Selected dropdown menu item background
+       #f3dce4 - Menu separators
        ========================================================= */
 
     QMenuBar {
-        background-color: #f8fafc;
-        color: #334155;
-        border-bottom: 1px solid #d7dee8;
+        background-color: #fceff3;
+        color: #68415f;
+        border-bottom: 1px solid #f0ccd8;
         padding: 4px 8px;
         spacing: 4px;
     }
 
     QMenuBar::item {
         background-color: transparent;
-        color: #334155;
+        color: #68415f;
         padding: 6px 10px;
         border-radius: 6px;
     }
 
     QMenuBar::item:selected {
-        background-color: #dbeafe;
-        color: #0f172a;
+        background-color: #ffe3ec;
+        color: #56354f;
     }
 
     QMenuBar::item:pressed {
-        background-color: #bfdbfe;
-        color: #0f172a;
+        background-color: #ffc9db;
+        color: #56354f;
     }
 
     QMenu {
-        background-color: #ffffff;
-        color: #334155;
-        border: 1px solid #cbd5e1;
+        background-color: #fffafb;
+        color: #68415f;
+        border: 1px solid #e8b5c7;
         padding: 4px;
     }
 
     QMenu::item {
         background-color: transparent;
-        color: #334155;
+        color: #68415f;
         padding: 7px 28px 7px 10px;
         border-radius: 5px;
     }
 
     QMenu::item:selected {
-        background-color: #dbeafe;
-        color: #0f172a;
+        background-color: #ffe3ec;
+        color: #56354f;
     }
 
     QMenu::separator {
         height: 1px;
-        background-color: #e2e8f0;
+        background-color: #f3dce4;
         margin: 4px 8px;
     }
 
@@ -85,22 +85,22 @@ LIGHT_THEME = """
     /* =========================================================
        GENERAL LABELS AND HEADINGS
 
-       #334155 - Standard application text
-       #1e293b - Strong / primary title text
+       #68415f - Standard application text
+       #56354f - Strong / primary title text
        ========================================================= */
 
     QLabel {
-        color: #334155;
+        color: #68415f;
     }
 
     QLabel#appTitle {
-        color: #1e293b;
+        color: #56354f;
         font-size: 28px;
         font-weight: bold;
     }
 
     QLabel#sectionTitle {
-        color: #334155;
+        color: #68415f;
         font-size: 18px;
         font-weight: 600;
     }
@@ -109,13 +109,13 @@ LIGHT_THEME = """
     /* =========================================================
        MAIN PANELS
 
-       #ffffff - Panel background
-       #d7dee8 - Panel border
+       #fffafb - Panel background
+       #f0ccd8 - Panel border
        ========================================================= */
 
     QFrame#panel {
-        background-color: #ffffff;
-        border: 1px solid #d7dee8;
+        background-color: #fffafb;
+        border: 1px solid #f0ccd8;
         border-radius: 12px;
     }
 
@@ -123,14 +123,14 @@ LIGHT_THEME = """
     /* =========================================================
        GENERAL PUSH BUTTONS
 
-       #2563eb - Normal primary button background
-       #1d4ed8 - Hovered primary button background
-       #1e40af - Pressed primary button background
+       #d0618d - Normal primary button background
+       #ba4f7a - Hovered primary button background
+       #9f3e67 - Pressed primary button background
        #ffffff - Button text
        ========================================================= */
 
     QPushButton {
-        background-color: #2563eb;
+        background-color: #d0618d;
         color: #ffffff;
         border: none;
         border-radius: 8px;
@@ -138,136 +138,136 @@ LIGHT_THEME = """
     }
 
     QPushButton:hover {
-        background-color: #1d4ed8;
+        background-color: #ba4f7a;
     }
 
     QPushButton:pressed {
-        background-color: #1e40af;
+        background-color: #9f3e67;
     }
 
 
     /* =========================================================
        TEXT AND DATE INPUTS
 
-       #ffffff - Editable field background
-       #0f172a - Editable field text
-       #cbd5e1 - Normal input border
-       #2563eb - Focused input border
-       #e2e8f0 - Disabled field background
-       #64748b - Disabled field text
-       #cbd5e1 - Disabled field border
+       #fffafb - Editable field background
+       #56354f - Editable field text
+       #e8b5c7 - Normal input border
+       #d0618d - Focused input border
+       #f4dfe6 - Disabled field background
+       #8f657f - Disabled field text
+       #e8b5c7 - Disabled field border
        ========================================================= */
 
     QLineEdit,
     QDateEdit {
-        background-color: #ffffff;
-        color: #0f172a;
-        border: 1px solid #cbd5e1;
+        background-color: #fffafb;
+        color: #56354f;
+        border: 1px solid #e8b5c7;
         border-radius: 8px;
         padding: 8px 10px;
     }
 
     QLineEdit:focus,
     QDateEdit:focus {
-        border: 1px solid #2563eb;
+        border: 1px solid #d0618d;
     }
 
     QLineEdit:disabled,
     QDateEdit:disabled {
-        background-color: #e2e8f0;
-        color: #64748b;
-        border: 1px solid #cbd5e1;
+        background-color: #f4dfe6;
+        color: #8f657f;
+        border: 1px solid #e8b5c7;
     }
 
 
     /* =========================================================
        CALENDAR POPUP
 
-       #ffffff - Calendar background
-       #f8fafc - Calendar navigation / header background
-       #0f172a - Primary calendar text
-       #334155 - Secondary navigation text
-       #cbd5e1 - Calendar borders
-       #ffffff - Month / year control background
-       #cbd5e1 - Month / year control border
-       #dbeafe - Navigation hover background
-       #2563eb - Selected date background
+       #fffafb - Calendar background
+       #fceff3 - Calendar navigation / header background
+       #56354f - Primary calendar text
+       #68415f - Secondary navigation text
+       #e8b5c7 - Calendar borders
+       #fffafb - Month / year control background
+       #e8b5c7 - Month / year control border
+       #ffe3ec - Navigation hover background
+       #d0618d - Selected date background
        #ffffff - Selected date text
-       #94a3b8 - Disabled / out-of-range date text
+       #bd91a3 - Disabled / out-of-range date text
        ========================================================= */
 
     QCalendarWidget {
-        background-color: #ffffff;
-        color: #0f172a;
+        background-color: #fffafb;
+        color: #56354f;
     }
 
     QCalendarWidget QWidget#qt_calendar_navigationbar {
-        background-color: #f8fafc;
-        border-bottom: 1px solid #cbd5e1;
+        background-color: #fceff3;
+        border-bottom: 1px solid #e8b5c7;
     }
 
     QCalendarWidget QToolButton {
         background-color: transparent;
-        color: #334155;
+        color: #68415f;
         border: none;
         border-radius: 6px;
         padding: 6px;
     }
 
     QCalendarWidget QToolButton:hover {
-        background-color: #dbeafe;
-        color: #0f172a;
+        background-color: #ffe3ec;
+        color: #56354f;
     }
 
     QCalendarWidget QSpinBox {
-        background-color: #ffffff;
-        color: #0f172a;
-        border: 1px solid #cbd5e1;
+        background-color: #fffafb;
+        color: #56354f;
+        border: 1px solid #e8b5c7;
         border-radius: 6px;
         padding: 4px;
     }
 
     QCalendarWidget QAbstractItemView:enabled {
-        background-color: #ffffff;
-        color: #0f172a;
-        selection-background-color: #2563eb;
+        background-color: #fffafb;
+        color: #56354f;
+        selection-background-color: #d0618d;
         selection-color: #ffffff;
         outline: none;
     }
 
     QCalendarWidget QAbstractItemView:disabled {
-        color: #94a3b8;
+        color: #bd91a3;
     }
 
 
     /* =========================================================
        COMBO BOXES / DROPDOWN SELECTORS
 
-       #ffffff - Closed dropdown background
-       #ffffff - Open dropdown list background
-       #0f172a - Dropdown text
-       #cbd5e1 - Standard border
-       #94a3b8 - Hover border
-       #2563eb - Focus border
-       #eff6ff - Dropdown item hover background
-       #dbeafe - Selected dropdown item background
+       #fffafb - Closed dropdown background
+       #fffafb - Open dropdown list background
+       #56354f - Dropdown text
+       #e8b5c7 - Standard border
+       #bd91a3 - Hover border
+       #d0618d - Focus border
+       #fff0f5 - Dropdown item hover background
+       #ffe3ec - Selected dropdown item background
        ========================================================= */
 
     QComboBox {
-        background-color: #ffffff;
-        color: #0f172a;
-        border: 1px solid #cbd5e1;
+        background-color: #fffafb;
+        color: #56354f;
+        border: 1px solid #e8b5c7;
         border-radius: 8px;
         padding: 8px 10px;
         min-height: 18px;
     }
 
     QComboBox:hover {
-        border: 1px solid #94a3b8;
+        border: 1px solid #bd91a3;
     }
 
     QComboBox:focus {
-        border: 1px solid #2563eb;
+        border: 1px solid #d0618d;
     }
 
     QComboBox::drop-down {
@@ -276,49 +276,49 @@ LIGHT_THEME = """
     }
 
     QComboBox QAbstractItemView {
-        background-color: #ffffff;
-        color: #0f172a;
-        border: 1px solid #cbd5e1;
+        background-color: #fffafb;
+        color: #56354f;
+        border: 1px solid #e8b5c7;
         outline: none;
     }
 
     QComboBox QAbstractItemView::item {
-        background-color: #ffffff;
-        color: #0f172a;
+        background-color: #fffafb;
+        color: #56354f;
         padding: 6px 10px;
     }
 
     QComboBox QAbstractItemView::item:hover {
-        background-color: #eff6ff;
-        color: #0f172a;
+        background-color: #fff0f5;
+        color: #56354f;
     }
 
     QComboBox QAbstractItemView::item:selected {
-        background-color: #dbeafe;
-        color: #0f172a;
+        background-color: #ffe3ec;
+        color: #56354f;
     }
 
 
     /* =========================================================
        DIALOGS AND MESSAGE BOXES
 
-       #f8fafc - Dialog / message box background
-       #334155 - Dialog text and checkbox label text
+       #fceff3 - Dialog / message box background
+       #68415f - Dialog text and checkbox label text
        ========================================================= */
 
     QDialog,
     QMessageBox {
-        background-color: #f8fafc;
-        color: #334155;
+        background-color: #fceff3;
+        color: #68415f;
     }
 
     QDialog QLabel,
     QMessageBox QLabel {
-        color: #334155;
+        color: #68415f;
     }
 
     QDialog QCheckBox {
-        color: #334155;
+        color: #68415f;
         spacing: 7px;
     }
 
@@ -337,7 +337,7 @@ LIGHT_THEME = """
     }
 
     QListWidget#stepList {
-        color: #1e293b;
+        color: #56354f;
     }
 
 
@@ -355,19 +355,19 @@ LIGHT_THEME = """
     }
 
     QListWidget#stepList::item {
-        color: #1e293b;
+        color: #56354f;
     }
 
 
     /* =========================================================
        CUSTOM DRAG AND DROP INDICATORS
 
-       #2563eb - Insertion line shown between cards while
+       #d0618d - Insertion line shown between cards while
                   reordering tasks or steps
        ========================================================= */
 
     QFrame#customDropIndicator {
-        background-color: #2563eb;
+        background-color: #d0618d;
         border: none;
         border-radius: 1px;
     }
@@ -376,51 +376,51 @@ LIGHT_THEME = """
     /* =========================================================
        TASK AND STEP CARDS
 
-       #f8fafc - Normal card background
-       #d7dee8 - Normal card border
-       #e0eaff - Hovered card background
-       #93c5fd - Hovered card border
-       #dbeafe - Selected card background
-       #2563eb - Selected card border
+       #fffafb - Normal card background
+       #f0ccd8 - Normal card border
+       #ffe8f0 - Hovered card background
+       #ffb7ce - Hovered card border
+       #ffd7e4 - Selected card background
+       #d0618d - Selected card border
        ========================================================= */
 
     QFrame#taskCard,
     QFrame#stepCard {
-        background-color: #f8fafc;
-        border: 1px solid #d7dee8;
+        background-color: #fffafb;
+        border: 1px solid #f0ccd8;
         border-radius: 10px;
     }
 
     QFrame#taskCard:hover,
     QFrame#stepCard:hover {
-        background-color: #e0eaff;
-        border: 1px solid #93c5fd;
+        background-color: #ffe8f0;
+        border: 1px solid #ffb7ce;
     }
 
     QFrame#taskCard[selected="true"],
     QFrame#stepCard[selected="true"],
     QFrame#taskCard[selected="true"]:hover,
     QFrame#stepCard[selected="true"]:hover {
-        background-color: #dbeafe;
-        border: 2px solid #2563eb;
+        background-color: #ffd7e4;
+        border: 2px solid #d0618d;
     }
 
 
     /* =========================================================
        TASK CARD TEXT
 
-       #0f172a - Task title / primary text
-       #64748b - Secondary task details
+       #56354f - Task title / primary text
+       #8f657f - Secondary task details
        ========================================================= */
 
     QLabel#taskCardTitle {
-        color: #0f172a;
+        color: #56354f;
         font-size: 16px;
         font-weight: 700;
     }
 
     QLabel#taskCardDetails {
-        color: #64748b;
+        color: #8f657f;
         font-size: 13px;
     }
 
@@ -428,10 +428,10 @@ LIGHT_THEME = """
     /* =========================================================
        TASK STATUS BADGES
 
-       #475569 / #e2e8f0 - TBD text / background
-       #1d4ed8 / #dbeafe - WIP text / background
-       #9a3412 / #ffedd5 - Awaiting text / background
-       #166534 / #dcfce7 - Completed text / background
+       #765667 / #f4dfe6 - TBD text / background
+       #9f3e67 / #ffd7e4 - WIP text / background
+       #a84d72 / #ffe3ec - Awaiting text / background
+       #68415f / #eadce6 - Completed text / background
        ========================================================= */
 
     QLabel#statusBadge {
@@ -441,34 +441,34 @@ LIGHT_THEME = """
     }
 
     QLabel#statusBadge[status="TBD"] {
-        color: #475569;
-        background-color: #e2e8f0;
+        color: #765667;
+        background-color: #f4dfe6;
     }
 
     QLabel#statusBadge[status="WIP"] {
-        color: #1d4ed8;
-        background-color: #dbeafe;
+        color: #9f3e67;
+        background-color: #ffd7e4;
     }
 
     QLabel#statusBadge[status="Awaiting"] {
-        color: #9a3412;
-        background-color: #ffedd5;
+        color: #a84d72;
+        background-color: #ffe3ec;
     }
 
     QLabel#statusBadge[status="Completed"] {
-        color: #166534;
-        background-color: #dcfce7;
+        color: #68415f;
+        background-color: #eadce6;
     }
 
 
     /* =========================================================
        STEP CARD TEXT
 
-       #0f172a - Step description / primary text
+       #56354f - Step description / primary text
        ========================================================= */
 
     QLabel#stepDescription {
-        color: #0f172a;
+        color: #56354f;
         font-size: 15px;
         font-weight: 600;
     }
@@ -477,7 +477,7 @@ LIGHT_THEME = """
     /* =========================================================
        CHECKBOX LABELS AND SPACING
 
-       #334155 - Inline "Add dependency" label text
+       #68415f - Inline "Add dependency" label text
 
        Step completion and dependency-resolution checkboxes have no
        label spacing because their text is rendered separately.
@@ -493,7 +493,7 @@ LIGHT_THEME = """
     }
 
     QCheckBox#addStepDependencyCheckbox {
-        color: #334155;
+        color: #68415f;
         font-size: 14px;
         spacing: 7px;
     }
@@ -507,8 +507,8 @@ LIGHT_THEME = """
        - Step completion checkbox
        - Inline "Add dependency" checkbox
 
-       #ffffff - Unchecked indicator background
-       #64748b - Normal indicator border
+       #fffafb - Unchecked indicator background
+       #a9788d - Normal indicator border
        ========================================================= */
 
     QDialog QCheckBox::indicator,
@@ -516,9 +516,9 @@ LIGHT_THEME = """
     QCheckBox#addStepDependencyCheckbox::indicator {
         width: 18px;
         height: 18px;
-        border: 2px solid #64748b;
+        border: 2px solid #a9788d;
         border-radius: 4px;
-        background-color: #ffffff;
+        background-color: #fffafb;
     }
 
 
@@ -528,24 +528,24 @@ LIGHT_THEME = """
        These use a smaller 16px indicator to distinguish the
        subordinate dependency control from the main checkbox.
 
-       #ffffff - Unresolved indicator background
-       #64748b - Normal indicator border
+       #fffafb - Unresolved indicator background
+       #a9788d - Normal indicator border
        ========================================================= */
 
     QCheckBox#stepDependencyResolvedCheckbox::indicator,
     QCheckBox#taskDependencyResolvedCheckbox::indicator {
         width: 16px;
         height: 16px;
-        border: 2px solid #64748b;
+        border: 2px solid #a9788d;
         border-radius: 4px;
-        background-color: #ffffff;
+        background-color: #fffafb;
     }
 
 
     /* =========================================================
        CHECKBOX HOVER STATE
 
-       #2563eb - Hover border for every interactive
+       #d0618d - Hover border for every interactive
                   checkbox
        ========================================================= */
 
@@ -554,14 +554,14 @@ LIGHT_THEME = """
     QCheckBox#addStepDependencyCheckbox::indicator:hover,
     QCheckBox#stepDependencyResolvedCheckbox::indicator:hover,
     QCheckBox#taskDependencyResolvedCheckbox::indicator:hover {
-        border: 2px solid #2563eb;
+        border: 2px solid #d0618d;
     }
 
 
     /* =========================================================
        CHECKBOX CHECKED STATE
 
-       #2563eb - Checked background and border
+       #d0618d - Checked background and border
        check.svg - White checkmark icon
 
        All checkboxes use the same checked-state visual language.
@@ -572,8 +572,8 @@ LIGHT_THEME = """
     QCheckBox#addStepDependencyCheckbox::indicator:checked,
     QCheckBox#stepDependencyResolvedCheckbox::indicator:checked,
     QCheckBox#taskDependencyResolvedCheckbox::indicator:checked {
-        background-color: #2563eb;
-        border: 2px solid #2563eb;
+        background-color: #d0618d;
+        border: 2px solid #d0618d;
         image: url(assets/icons/check.svg);
     }
 
@@ -581,12 +581,12 @@ LIGHT_THEME = """
     /* =========================================================
        DEPENDENCY TEXT
 
-       #9a3412 - Warning / waiting-for-dependency text
+       #a84d72 - Warning / waiting-for-dependency text
        ========================================================= */
 
     QLabel#stepDependencyText,
     QLabel#taskDependencyText {
-        color: #9a3412;
+        color: #a84d72;
         font-size: 13px;
     }
 
@@ -595,12 +595,12 @@ LIGHT_THEME = """
        EDIT / DELETE TOOL BUTTONS
 
        Transparent - Normal button background
-       #dbeafe - Edit hover background
-       #bfdbfe - Edit hover border
-       #bfdbfe - Edit pressed background
-       #fee2e2 - Delete hover background
-       #fecaca - Delete hover border
-       #fecaca - Delete pressed background
+       #ffe3ec - Edit hover background
+       #ffbfd3 - Edit hover border
+       #ffbfd3 - Edit pressed background
+       #fee7eb - Delete hover background
+       #f6b5c0 - Delete hover border
+       #f6b5c0 - Delete pressed background
        ========================================================= */
 
     QToolButton#stepEditButton,
@@ -615,24 +615,24 @@ LIGHT_THEME = """
 
     QToolButton#stepEditButton:hover,
     QToolButton#taskEditButton:hover {
-        background-color: #dbeafe;
-        border: 1px solid #bfdbfe;
+        background-color: #ffe3ec;
+        border: 1px solid #ffbfd3;
     }
 
     QToolButton#stepEditButton:pressed,
     QToolButton#taskEditButton:pressed {
-        background-color: #bfdbfe;
+        background-color: #ffbfd3;
     }
 
     QToolButton#stepDeleteButton:hover,
     QToolButton#taskDeleteButton:hover {
-        background-color: #fee2e2;
-        border: 1px solid #fecaca;
+        background-color: #fee7eb;
+        border: 1px solid #f6b5c0;
     }
 
     QToolButton#stepDeleteButton:pressed,
     QToolButton#taskDeleteButton:pressed {
-        background-color: #fecaca;
+        background-color: #f6b5c0;
     }
 
 """
