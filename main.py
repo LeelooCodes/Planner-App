@@ -1,6 +1,10 @@
 import sys
 
+from pathlib import Path
+
 from PySide6.QtCore import QDate, Qt, QSize
+
+from PySide6.QtGui import QIcon
 
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -1067,6 +1071,17 @@ if __name__ == "__main__":
 
     app.setApplicationName("PyPlanner")
     app.setApplicationDisplayName("PyPlanner")
+
+    app_icon_path = (
+        Path(__file__).resolve().parent
+        / "assets"
+        / "icons"
+        / "app-icon.png"
+    )
+
+    app.setWindowIcon(
+        QIcon(str(app_icon_path))
+    )
 
     app.setStyle(
         QStyleFactory.create("Fusion")

@@ -1,6 +1,8 @@
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QIcon
 
+from utils.paths import resource_path
+
 from PySide6.QtWidgets import (
     QCheckBox,
     QFrame,
@@ -78,7 +80,13 @@ class TaskCard(QFrame):
         )
 
         self.edit_button.setIcon(
-            QIcon("assets/icons/edit.svg")
+            QIcon(
+                str(
+                    resource_path(
+                        "assets/icons/edit.svg"
+                    )
+                )
+            )
         )
 
         self.edit_button.setIconSize(
@@ -105,7 +113,13 @@ class TaskCard(QFrame):
         )
 
         self.delete_button.setIcon(
-            QIcon("assets/icons/delete.svg")
+            QIcon(
+                str(
+                    resource_path(
+                        "assets/icons/delete.svg"
+                    )
+                )
+            )
         )
 
         self.delete_button.setIconSize(

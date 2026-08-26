@@ -1,6 +1,8 @@
 from themes.light import LIGHT_THEME
 from themes.dark import DARK_THEME
 
+from utils.paths import resource_path
+
 class ThemeManager:
     DEFAULT_THEME = "Light"
 
@@ -28,7 +30,12 @@ class ThemeManager:
 
         stylesheet = self.themes[
             theme_name
-        ]
+        ].replace(
+            "assets/icons/check.svg",
+            resource_path(
+                "assets/icons/check.svg"
+            ).as_posix()
+        )
 
         self.app.setStyleSheet(
             stylesheet

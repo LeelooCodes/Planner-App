@@ -2,7 +2,9 @@ import sqlite3
 
 from datetime import datetime
 
-DB_FILE = "planner.db"
+from utils.paths import database_path
+
+DB_FILE = database_path()
 
 
 class PlannerDatabase:
