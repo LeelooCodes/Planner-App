@@ -1,3 +1,14 @@
+LIGHT_ICON_COLORS = {
+    "edit": {
+        "fill": "#DBEAFE",
+        "stroke": "#2563EB",
+    },
+    "delete": {
+        "fill": "#FEE2E2",
+        "stroke": "#DC2626",
+    },
+}
+
 LIGHT_THEME = """
 
     /* =========================================================

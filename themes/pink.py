@@ -1,14 +1,25 @@
+PINK_ICON_COLORS = {
+    "edit": {
+        "fill": "#ffe3ec",
+        "stroke": "#d0618d",
+    },
+    "delete": {
+        "fill": "#fee7eb",
+        "stroke": "#c94f78",
+    },
+}
+
 PINK_THEME = """
 
     /* =========================================================
        GLOBAL APPLICATION
 
-       #fff7fa - Main application background
+       #ffdae7 - Main application background
        #68415f - Default foreground / text colour
        ========================================================= */
 
     QMainWindow {
-        background-color: #fff7fa;
+        background-color: #ffdae7;
     }
 
     QWidget {
@@ -376,25 +387,25 @@ PINK_THEME = """
     /* =========================================================
        TASK AND STEP CARDS
 
-       #fffafb - Normal card background
+       #ffe7ef - Normal card background
        #f0ccd8 - Normal card border
-       #ffe8f0 - Hovered card background
-       #ffb7ce - Hovered card border
-       #ffd7e4 - Selected card background
+       #ffd2df - Hovered card background
+       #ff9fbd - Hovered card border
+       #ffe7ef - Selected card background
        #d0618d - Selected card border
        ========================================================= */
 
     QFrame#taskCard,
     QFrame#stepCard {
-        background-color: #fffafb;
+        background-color: #ffe7ef;
         border: 1px solid #f0ccd8;
         border-radius: 10px;
     }
 
     QFrame#taskCard:hover,
     QFrame#stepCard:hover {
-        background-color: #ffe8f0;
-        border: 1px solid #ffb7ce;
+        background-color: #ffd2df;
+        border: 1px solid #ff9fbd;
     }
 
     QFrame#taskCard[selected="true"],

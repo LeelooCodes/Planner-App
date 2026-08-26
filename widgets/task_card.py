@@ -2,6 +2,7 @@ from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QIcon
 
 from utils.paths import resource_path
+from utils.themed_icon import themed_icon
 
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -80,12 +81,8 @@ class TaskCard(QFrame):
         )
 
         self.edit_button.setIcon(
-            QIcon(
-                str(
-                    resource_path(
-                        "assets/icons/edit.svg"
-                    )
-                )
+            themed_icon(
+                "edit"
             )
         )
 
@@ -113,12 +110,8 @@ class TaskCard(QFrame):
         )
 
         self.delete_button.setIcon(
-            QIcon(
-                str(
-                    resource_path(
-                        "assets/icons/delete.svg"
-                    )
-                )
+            themed_icon(
+                "delete"
             )
         )
 

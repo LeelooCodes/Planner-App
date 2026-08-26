@@ -1,3 +1,14 @@
+PURPLE_ICON_COLORS = {
+    "edit": {
+        "fill": "#32145c",
+        "stroke": "#c7a2ea",
+    },
+    "delete": {
+        "fill": "#4a103f",
+        "stroke": "#e38ac0",
+    },
+}
+
 PURPLE_THEME = """
 
     /* =========================================================
