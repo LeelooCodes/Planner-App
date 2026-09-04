@@ -335,6 +335,25 @@ PINK_THEME = """
 
 
     /* =========================================================
+    SETTINGS - FONT PREVIEW
+    ========================================================= */
+
+    QLabel#settingsPreviewTitle {
+        color: #9f3e67;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    QLabel#fontPreview {
+        background-color: #fff4f8;
+        color: #68415f;
+
+        border: 1px solid #ff9fbd;
+        border-radius: 10px;
+    }
+
+
+    /* =========================================================
        GENERAL LIST WIDGETS
 
        List backgrounds remain transparent so the surrounding panel

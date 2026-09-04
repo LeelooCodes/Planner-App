@@ -333,6 +333,25 @@ DARK_THEME = """
         spacing: 7px;
     }
 
+    /* =========================================================
+        SETTINGS - FONT PREVIEW
+        ========================================================= */
+
+    QLabel#settingsPreviewTitle {
+        color: #e2e8f0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    QLabel#fontPreview {
+        background-color: #0f172a;
+        color: #f8fafc;
+
+        border: 1px solid #334155;
+        border-radius: 10px;
+    }
+
+    
 
     /* =========================================================
        GENERAL LIST WIDGETS

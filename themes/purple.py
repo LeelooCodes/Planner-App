@@ -333,6 +333,24 @@ PURPLE_THEME = """
         spacing: 7px;
     }
 
+     /* =========================================================
+    SETTINGS - FONT PREVIEW
+    ========================================================= */
+
+    QLabel#settingsPreviewTitle {
+        color: #c4a8dc;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    QLabel#fontPreview {
+        background-color: #1a0338;
+        color: #e9dcf7;
+
+        border: 1px solid #4A1985;
+        border-radius: 10px;
+    }
+
 
     /* =========================================================
        GENERAL LIST WIDGETS

@@ -333,6 +333,24 @@ LIGHT_THEME = """
         spacing: 7px;
     }
 
+    /* =========================================================
+        SETTINGS - FONT PREVIEW
+        ========================================================= */
+
+    QLabel#settingsPreviewTitle {
+        color: #1e293b;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    QLabel#fontPreview {
+        background-color: #ffffff;
+        color: #0f172a;
+
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+    }
+
 
     /* =========================================================
        GENERAL LIST WIDGETS

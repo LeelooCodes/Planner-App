@@ -262,12 +262,14 @@ class SettingsDialog(QDialog):
 
         self.preview_label = QLabel(
             (
-                "Plan something wonderful ✨\n"
+                "Plan something wonderful ✨\n\n"
                 "The quick brown fox jumps over "
                 "the lazy dog.\n"
-                "Español: mañana • "
-                "עברית: שלום • "
-                "1234567890"
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ\n"
+                "abcdefghijklmnopqrstuvwxyz\n"
+                "0123456789\n\n"
+                "Español: mañana  •  "
+                "עברית: שלום"
             )
         )
 
@@ -298,7 +300,7 @@ class SettingsDialog(QDialog):
         )
 
         self.preview_label.setMinimumHeight(
-            110
+            180
         )
 
         main_layout.addWidget(
