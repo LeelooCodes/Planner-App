@@ -41,6 +41,8 @@ from menus.app_menu_bar import AppMenuBar
 
 from themes.theme_manager import ThemeManager
 
+from utils.font_manager import FontManager
+
 from widgets.reorderable_list_widget import ReorderableListWidget
 from widgets.step_card import StepCard
 from widgets.task_card import TaskCard
@@ -51,11 +53,13 @@ from widgets.task_card import TaskCard
 class PlannerWindow(QMainWindow):
     def __init__(
             self,
-            theme_manager
+            theme_manager,
+            font_manager
             ):
         super().__init__()
 
         self.theme_manager = theme_manager
+        self.font_manager = font_manager
 
         self.database = PlannerDatabase()
 
@@ -1097,15 +1101,26 @@ if __name__ == "__main__":
 
     app_settings = AppSettings()
 
-    theme_manager = ThemeManager(
+    font_manager = FontManager(
         app,
         app_settings
+    )
+
+    font_manager.apply_saved_font()
+
+    theme_manager = ThemeManager(
+        app,
+        app_settings,
+        stylesheet_transformer=(
+            font_manager.scale_stylesheet
+        )
     )
 
     theme_manager.apply_saved_theme()
 
     window = PlannerWindow(
-        theme_manager
+        theme_manager,
+        font_manager
     )
     window.showMaximized()
 

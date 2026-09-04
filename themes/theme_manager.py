@@ -21,9 +21,10 @@ from utils.themed_icon import refresh_themed_icons
 class ThemeManager:
     DEFAULT_THEME = "Light"
 
-    def __init__(self, app, settings):
+    def __init__(self, app, settings, stylesheet_transformer=None):
         self.app = app
         self.settings = settings
+        self.stylesheet_transformer = stylesheet_transformer
 
         self.themes = {
             "Light": {
@@ -74,6 +75,16 @@ class ThemeManager:
             "themeIconColors",
             theme["icon_colors"]
         )
+
+        if (
+            self.stylesheet_transformer
+            is not None
+        ):
+            stylesheet = (
+                self.stylesheet_transformer(
+                    stylesheet
+                )
+            )
 
         self.app.setStyleSheet(
             stylesheet
