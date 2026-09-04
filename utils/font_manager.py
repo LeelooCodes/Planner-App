@@ -297,7 +297,7 @@ class FontManager:
 
         def replace_font_size(match):
             original_size = float(
-                re.match.group(2)
+                match.group(2)
             )
 
             scaled_size = max(

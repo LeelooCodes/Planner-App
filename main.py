@@ -313,6 +313,9 @@ class PlannerWindow(QMainWindow):
                 self.theme_manager
                 .get_current_theme()
             ),
+            font_manager=(
+                self.font_manager
+            ),
             parent=self
         )
 
@@ -325,15 +328,55 @@ class PlannerWindow(QMainWindow):
             dialog.get_selected_theme()
         )
 
-        if (
-            selected_theme
-            == self.theme_manager.get_current_theme()
-        ):
-            return
-
-        self.theme_manager.apply_theme(
-            selected_theme
+        selected_font_family = (
+            dialog.get_selected_font_family()
         )
+
+        selected_text_size = (
+            dialog.get_selected_text_size()
+        )
+
+        theme_changed = (
+            selected_theme
+            != self.theme_manager
+            .get_current_theme()
+        )
+
+        font_changed = (
+            selected_font_family
+            != self.font_manager
+            .get_current_font_family()
+        )
+
+        text_size_changed = (
+            selected_text_size
+            != self.font_manager
+            .get_current_text_size()
+        )
+
+        typography_changed = (
+            font_changed
+            or text_size_changed
+        )
+
+        if typography_changed:
+            self.font_manager.apply_font(
+                selected_font_family,
+                selected_text_size
+            )
+
+        if (
+            theme_changed
+            or typography_changed
+        ):
+            self.theme_manager.apply_theme(
+                selected_theme
+        )
+
+        if typography_changed:
+            self.load_tasks()
+
+            
 
     def open_add_task_dialog(self):
         dialog = AddTaskDialog(self)
@@ -1117,6 +1160,8 @@ if __name__ == "__main__":
     )
 
     theme_manager.apply_saved_theme()
+
+    font_manager.apply_saved_font()
 
     window = PlannerWindow(
         theme_manager,
