@@ -104,6 +104,10 @@ class StepCard(QFrame):
             step["description"]
         )
 
+        description_label.setTextFormat(
+            Qt.TextFormat.PlainText
+        )
+
         description_label.setObjectName(
             "stepDescription"
         )
@@ -158,6 +162,10 @@ class StepCard(QFrame):
 
             dependency_text_label = QLabel(
                 f"Waiting for: {step['dependency']}"
+            )
+
+            dependency_text_label.setTextFormat(
+                Qt.TextFormat.PlainText
             )
 
             dependency_text_label.setObjectName(

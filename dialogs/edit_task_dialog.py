@@ -1,4 +1,4 @@
-from PySide6.QtCore import QDate
+from PySide6.QtCore import QDate, Qt
 
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -127,6 +127,10 @@ class EditTaskDialog(QDialog):
         )
 
         self.dependency_value_label = QLabel()
+
+        self.dependency_value_label.setTextFormat(
+            Qt.TextFormat.PlainText
+        )
 
         self.dependency_value_label.setWordWrap(
             True

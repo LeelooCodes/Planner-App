@@ -58,6 +58,10 @@ class TaskCard(QFrame):
             task["title"]
         )
 
+        title_label.setTextFormat(
+            Qt.TextFormat.PlainText
+        )
+
         title_label.setObjectName(
             "taskCardTitle"
         )
@@ -224,6 +228,10 @@ class TaskCard(QFrame):
 
             dependency_text_label = QLabel(
                 f"Waiting for: {task['dependency']}"
+            )
+
+            dependency_text_label.setTextFormat(
+                Qt.TextFormat.PlainText
             )
 
             dependency_text_label.setObjectName(

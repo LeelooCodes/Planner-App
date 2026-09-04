@@ -188,6 +188,10 @@ class PlannerWindow(QMainWindow):
             "Select a task to view its steps."
         )
 
+        self.step_heading.setTextFormat(
+            Qt.TextFormat.PlainText
+        )
+
         self.step_heading.setObjectName("sectionTitle")
 
         self.step_heading.setWordWrap(True)
