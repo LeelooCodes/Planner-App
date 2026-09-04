@@ -745,6 +745,8 @@ class PlannerWindow(QMainWindow):
             self.pending_step_dependency = (
                 dialog.get_dependency()
             )
+
+            self.new_step_input.setFocus()
             return
 
         # The dialog was cancelled or closed.
@@ -759,6 +761,8 @@ class PlannerWindow(QMainWindow):
             self.add_step_dependency_checkbox.blockSignals(False)
         else:
             self.pending_step_dependency = previous_dependency
+
+        self.new_step_input.setFocus()
 
     def add_step_inline(self):
 
